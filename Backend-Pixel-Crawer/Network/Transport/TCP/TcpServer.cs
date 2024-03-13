@@ -3,6 +3,9 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using Newtonsoft;
+using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace Backend_Pixel_Crawler.Network.Transport.TCP
 {
@@ -18,6 +21,17 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             StartServer();
         }
 
+        public string GetAvailableLobbies()
+        {
+
+           var listOfLobbies = lobbies.Values.Select(lobby => new
+           {
+               Id = lobby.LobbyId,
+               Status = lobby.isGameStarted ? "In Progress" : "Waiting for Players"
+           }).ToList();
+            return JsonConvert.SerializeObject(listOfLobbies);
+        }
+
        public void StartServer()
         {
 
@@ -30,8 +44,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
             byte[] buffer = new byte[1024];
 
- 
-            Console.WriteLine("test");
     
                 using TcpClient client = _tcpListener.AcceptTcpClient();
                 var tcpStream = client.GetStream();
@@ -42,8 +54,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 while ((readTotal = tcpStream.Read(buffer, 0, buffer.Length)) != 0)
                 {
 
-
-                Console.WriteLine("connected");
 
                 string request = Encoding.ASCII.GetString(buffer, 0, readTotal);
                 string[] tokens = request.Split(',');
@@ -90,6 +100,14 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     var response = Encoding.UTF8.GetBytes(lobbyId);
                     tcpStream.Write(response, 0, response.Length);
 
+                }
+                else if (tokens[0] == "LIST_LOBBIES")
+                {
+                    string playerId = tokens[1];
+                    string playerName = tokens[2];
+                    Player player = new Player(playerId, playerName, client);
+                    string lobbyList = GetAvailableLobbies();
+                    player.SendMessage(lobbyList);
                 }
 
             }
