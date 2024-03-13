@@ -28,4 +28,5 @@ app.MapHub<ClientHub>("client-hub");
 
 app.MapControllers();
 
+app.UseCors();
 app.Run();

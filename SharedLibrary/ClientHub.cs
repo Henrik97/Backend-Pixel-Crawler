@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿/* using Microsoft.AspNetCore.SignalR;
 namespace Backend_Pixel_Crawler
 {
     public class ClientHub : Hub
@@ -9,3 +9,4 @@ namespace Backend_Pixel_Crawler
         }
     }
 }
+*/
