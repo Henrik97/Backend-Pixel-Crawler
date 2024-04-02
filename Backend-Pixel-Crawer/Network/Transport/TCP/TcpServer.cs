@@ -98,7 +98,9 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     lobbies.Add(lobbyId, newLobby); 
 
                     var response = Encoding.UTF8.GetBytes(lobbyId);
-                    tcpStream.Write(response, 0, response.Length);
+                    tcpStream.Write(response, 0, response.Length); // Send the lobby ID to the client
+
+
 
                 }
                 else if (tokens[0] == "LIST_LOBBIES")

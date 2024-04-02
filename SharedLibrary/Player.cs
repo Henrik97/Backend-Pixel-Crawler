@@ -19,7 +19,7 @@ namespace SharedLibrary
         public void SendMessage(string message)
         {
             byte[] buffer = Encoding.ASCII.GetBytes(message);
-
+           
             NetworkStream stream = TcpClient.GetStream();
 
             stream.Write(buffer, 0, buffer.Length);
