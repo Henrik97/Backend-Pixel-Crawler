@@ -2,10 +2,6 @@ using Backend_Pixel_Crawler;
 using Backend_Pixel_Crawler.Network.Transport.TCP;
 using SharedLibrary;
 
-
-
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 //Add services to the container.
