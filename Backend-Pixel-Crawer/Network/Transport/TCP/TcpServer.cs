@@ -35,6 +35,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             }
         }
 
+
         private void HandleClient(TcpClient client)
         {
             Console.WriteLine("Handling client...");
@@ -97,5 +98,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
             Console.WriteLine("SPAWN_PLAYER signal sent to all clients.");
         }
+
     }
 }
