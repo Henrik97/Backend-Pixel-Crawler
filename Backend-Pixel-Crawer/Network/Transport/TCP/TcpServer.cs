@@ -74,6 +74,14 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 {
                     // List lobbies or handle accordingly
                 }
+
+                else if (tokens[0] == "Space")
+                {
+                    string action = tokens[0];
+                    string playerId = tokens[1];
+                    string content = tokens[2];
+                    Console.WriteLine($"action: {action}, playerID: {playerId}, JsonString: {content}");
+                }
             }
 
             stream.Close();
