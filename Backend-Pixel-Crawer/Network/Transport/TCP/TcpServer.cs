@@ -30,11 +30,11 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
             while (true)
             {
-                TcpClient client = _tcpListener.AcceptTcpClient();
+                TcpClient client = _tcpListener.AcceptTcpClient();                
+             //   ThreadPool.QueueUserWorkItem(HandleClient, client);
                 _connectedClients.Add(client); // Add client to list of connected clients
                 Console.WriteLine("New client connected.");
-
-                HandleClient(client);
+                Task.Run(() => HandleClient(client));
             }
         }
 
@@ -102,8 +102,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         private void SendSpawnPlayerSignal(string playerId)
         {
             Console.WriteLine("Sending SPAWN_PLAYER signal...");
-            Console.WriteLine(_connectedClients);
-
+           
             // Construct the message to send to clients
             string message = $"SPAWN_PLAYER,{playerId}";
 
