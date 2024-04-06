@@ -1,5 +1,7 @@
-﻿using System;
+﻿using SharedLibrary;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 
@@ -17,6 +19,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         }
 
         public void StartServer()
+
         {
             int port = 13000;
             string hostAddress = "127.0.0.1";
@@ -49,13 +52,22 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 string request = Encoding.ASCII.GetString(buffer, 0, readTotal);
                 string[] tokens = request.Split(',');
 
-                if (tokens[0] == "JOIN" && tokens.Length >= 4)
+                if (tokens[0] == "JOIN")
                 {
-                    string lobbyId = tokens[1];
-                    string playerId = tokens[2];
-                    string playerName = tokens[3];
+                    string playerId = tokens[1];
+                    string playerName = tokens[2];
 
-                    Console.WriteLine($"Player {playerId} with name {playerName} has joined lobby {lobbyId}");
+                    Console.WriteLine($"Player {playerName} with ID {playerId} has requested to join.");
+
+                    // Here, decide how to handle lobby assignment. If using a default lobby or creating a new one:
+                    //  Lobby defaultLobby = GetOrCreateDefaultLobby(); // Implement this based on our  lobby management logic.
+                    Player newPlayer = new Player(playerId, playerName, client);
+                    //   defaultLobby.AddPlayer(newPlayer);
+
+                    // Optionally, broadcast a message to other players in the lobby about the new player.
+                    //    defaultLobby.BroadcastMessage($"Player {playerName} has joined the lobby.", newPlayer);
+                    // Send "SPAWN_PLAYER" signal to all connected clients
+                    SendSpawnPlayerSignal(playerId);
 
                     // Add player to lobby or handle accordingly
                 }
@@ -67,8 +79,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     Console.WriteLine($"New lobby created by player {playerId} with name {playerName}");
 
-                    // Send "SPAWN_PLAYER" signal to all connected clients
-                    SendSpawnPlayerSignal(playerId);
+                    
                 }
                 else if (tokens[0] == "LIST_LOBBIES")
                 {
@@ -80,8 +91,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     string action = tokens[0];
                     string playerId = tokens[1];
                     string content = tokens[2];
-                    Console.WriteLine($"action: {action}, playerID: {playerId}, JsonString: {content}");
-                }
+                    Console.WriteLine($"action: {action}, playerID: {playerId}, JsonString: {content}");                    
+                }                
             }
 
             stream.Close();
@@ -91,6 +102,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         private void SendSpawnPlayerSignal(string playerId)
         {
             Console.WriteLine("Sending SPAWN_PLAYER signal...");
+            Console.WriteLine(_connectedClients);
 
             // Construct the message to send to clients
             string message = $"SPAWN_PLAYER,{playerId}";
