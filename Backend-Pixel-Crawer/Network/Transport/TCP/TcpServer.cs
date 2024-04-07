@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace Backend_Pixel_Crawler.Network.Transport.TCP
 {
@@ -11,7 +12,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
     {
         private TcpListener _tcpListener;
         private List<TcpClient> _connectedClients;
-
+        private List<Lobby> lobbies = new List<Lobby>();
+        private List<SimplifiedLobby> simplifiedLobbies = new List<SimplifiedLobby>();
         public TcpServer()
         {
             _connectedClients = new List<TcpClient>();
@@ -75,7 +77,23 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 {
                     string playerId = tokens[1];
                     string playerName = tokens[2];
-                    //string lobbyId = tokens[3];
+                    string lobbyName = tokens[3];
+                    Guid myuuid = Guid.NewGuid();
+                    string myuuidAsString = myuuid.ToString();
+
+                    Lobby newLobby = new Lobby(myuuidAsString, lobbyName, playerName) ;
+
+                    Player newPlayer = new Player(playerId, playerName, client);
+
+                    newLobby.AddPlayer(newPlayer);
+                    Console.WriteLine("looby id:" + myuuidAsString);
+
+                    Console.WriteLine(newLobby);
+
+                    lobbies.Add(newLobby);
+             
+
+                    Console.WriteLine(lobbies);
 
                     Console.WriteLine($"New lobby created by player {playerId} with name {playerName}");
 
@@ -83,7 +101,31 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 }
                 else if (tokens[0] == "LIST_LOBBIES")
                 {
-                    // List lobbies or handle accordingly
+
+       
+                    foreach (Lobby lobby in lobbies)
+                    {
+                        if (lobby.Players.Count > 0) // Ensure there's at least one player
+                        {
+                            var simpleInfo = new SimplifiedLobby
+                            {
+                                LobbyId = lobby.LobbyId,
+                                LobbyName = lobby.LobbyName, // Assuming you've added a LobbyName property
+                                CreatorName = lobby.Players.First().Name // Assuming the first player is the creator
+                            };
+                            simplifiedLobbies.Add(simpleInfo);
+                        }
+
+
+                    }
+
+
+                    string json = JsonSerializer.Serialize(simplifiedLobbies);
+                    byte[] data = Encoding.ASCII.GetBytes(json);
+                    client.GetStream().Write(data, 0, data.Length);
+
+                    Console.WriteLine(lobbies);
+
                 }
 
                 else if (tokens[0] == "Space")

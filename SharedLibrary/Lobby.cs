@@ -10,12 +10,17 @@ namespace SharedLibrary
     public class Lobby
     {
         public string LobbyId { get; set; }
+
+        public string LobbyName { get; set; }    
+        public string HostName { get; set; }
         public List<Player> Players { get; set; }
         public bool isGameStarted { get; set; }
 
-        public Lobby(string lobbyId) {
+        public Lobby(string lobbyId, string lobbyName, string hostName) {
 
             LobbyId = lobbyId;
+            LobbyName = lobbyName;
+            HostName = hostName;
             Players = new List<Player>();
             isGameStarted = false;
         
