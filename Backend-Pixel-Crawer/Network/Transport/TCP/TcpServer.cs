@@ -160,5 +160,24 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             Console.WriteLine("SPAWN_PLAYER signal sent to all clients.");
         }
 
+        private void SendRemovePlayerSignal(string playerId)
+        {
+            Console.WriteLine("Sending REMOVE_PLAYER signal...");
+
+            // Construct the message to send to clients
+            string message = $"REMOVE_PLAYER,{playerId}";
+
+            // Convert the message to bytes
+            byte[] dataToSend = Encoding.UTF8.GetBytes(message);
+
+            // Send the message to all connected clients
+            foreach (var client in _connectedClients)
+            {
+                client.GetStream().Write(dataToSend, 0, dataToSend.Length);
+            }
+
+            Console.WriteLine("REMOVE_PLAYER signal sent to all clients.");
+        }
+
     }
 }
