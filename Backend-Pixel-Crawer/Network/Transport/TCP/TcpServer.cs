@@ -121,7 +121,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
 
                     string json = JsonSerializer.Serialize(simplifiedLobbies);
-                    byte[] data = Encoding.ASCII.GetBytes(json);
+                    byte[] data = Encoding.UTF8.GetBytes(json);
                     client.GetStream().Write(data, 0, data.Length);
 
                     Console.WriteLine(lobbies);
