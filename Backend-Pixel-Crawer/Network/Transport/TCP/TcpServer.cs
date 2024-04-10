@@ -95,7 +95,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     Console.WriteLine(lobbies);
 
-                    Console.WriteLine($"New lobby created by player {playerId} with name {playerName}");
+                    Console.WriteLine($"New lobby with the name {lobbyName} created by player {playerId} with name {playerName}");
 
                     
                 }
