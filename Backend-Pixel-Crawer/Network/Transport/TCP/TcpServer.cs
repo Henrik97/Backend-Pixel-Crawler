@@ -95,7 +95,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     Console.WriteLine(lobbies);
 
-                    Console.WriteLine($"New lobby created by player {playerId} with name {playerName}");
+                    Console.WriteLine($"New lobby with the name {lobbyName} created by player {playerId} with name {playerName}");
 
                     
                 }
@@ -121,7 +121,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
 
                     string json = JsonSerializer.Serialize(simplifiedLobbies);
-                    byte[] data = Encoding.ASCII.GetBytes(json);
+                    byte[] data = Encoding.UTF8.GetBytes(json);
                     client.GetStream().Write(data, 0, data.Length);
 
                     Console.WriteLine(lobbies);
@@ -160,6 +160,25 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             }
 
             Console.WriteLine("SPAWN_PLAYER signal sent to all clients.");
+        }
+
+        private void SendRemovePlayerSignal(string playerId)
+        {
+            Console.WriteLine("Sending REMOVE_PLAYER signal...");
+
+            // Construct the message to send to clients
+            string message = $"REMOVE_PLAYER,{playerId}";
+
+            // Convert the message to bytes
+            byte[] dataToSend = Encoding.UTF8.GetBytes(message);
+
+            // Send the message to all connected clients
+            foreach (var client in _connectedClients)
+            {
+                client.GetStream().Write(dataToSend, 0, dataToSend.Length);
+            }
+
+            Console.WriteLine("REMOVE_PLAYER signal sent to all clients.");
         }
 
     }
