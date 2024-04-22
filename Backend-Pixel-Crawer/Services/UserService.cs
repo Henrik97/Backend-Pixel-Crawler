@@ -8,12 +8,12 @@ namespace Backend_Pixel_Crawler.Services
 {
     public class UserService : IUserService
     {
-        private readonly AppDbContext _context;
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly IUserAuthenticationService _authenticationService;
+          ApplicationDbContext _context;
+          IPasswordHasher _passwordHasher;
+          IUserAuthenticationService _authenticationService;
 
         public UserService(
-            AppDbContext context,
+            ApplicationDbContext context,
             IPasswordHasher passwordHasher,
             IUserAuthenticationService authenticationService)
         {
@@ -35,11 +35,13 @@ namespace Backend_Pixel_Crawler.Services
 
             var user = new UserModel
             {
+                Id = Guid.NewGuid(),
                 Name = createUser.Name,
                 Username = createUser.Username,
                 Email = createUser.Email,
                 Salt = _passwordHasher.HashPassword(createUser.Password).Salt,
                 HashedPassword = _passwordHasher.HashPassword(createUser.Password).HashPassword,
+                Password = createUser.Password,
 
             };
 

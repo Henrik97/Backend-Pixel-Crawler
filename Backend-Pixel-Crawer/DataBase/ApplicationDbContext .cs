@@ -3,10 +3,11 @@ using SharedLibrary;
 
 namespace Backend_Pixel_Crawler.Database
 {
-    public class AppDbContext : DbContext
+    public class ApplicationDbContext : DbContext
     {
         public DbSet<UserModel> Users { get; set; }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
+            : base(options) { }
 
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     }
 }

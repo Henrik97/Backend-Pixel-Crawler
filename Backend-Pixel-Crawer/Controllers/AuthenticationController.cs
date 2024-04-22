@@ -6,25 +6,28 @@ using SharedLibrary;
 using Microsoft.EntityFrameworkCore;
 using Backend_Pixel_Crawler.Services;
 using Backend_Pixel_Crawler.Interface;
+using Newtonsoft.Json.Linq;
 
 namespace Backend_Pixel_Crawler.Controllers
 {
 
-
     [ApiController]
-    [Route("[controller]")]
-
+    [Route("api/[controller]")]
     public class AuthenticationController : ControllerBase
 
     {
 
         private readonly IPasswordHasher _passwordHasher;
-            private readonly AppDbContext _context;
+        private readonly ApplicationDbContext _context;
+        private readonly IUserAuthenticationService _userAuthenticationService;
 
-            public AuthenticationController(AppDbContext context, IPasswordHasher passwordHasher )
+            public AuthenticationController(ApplicationDbContext context, IPasswordHasher passwordHasher, IUserAuthenticationService userAuthentication )
             {
                 _context = context;
                 _passwordHasher = passwordHasher;
+                _userAuthenticationService = userAuthentication;
+                
+            
             }
 
 
@@ -37,18 +40,21 @@ namespace Backend_Pixel_Crawler.Controllers
                     return BadRequest(ModelState);
                 }
 
+                var hashPassword = _passwordHasher.HashPassword(createUser.Password);
 
                 var user = new UserModel
                 {
                     Name = createUser.Name,
                     Username = createUser.Username,
                     Email = createUser.Email,
-                    Salt = _passwordHasher.HashPassword(createUser.Password).Salt,
-                    HashedPassword = _passwordHasher.HashPassword(createUser.Password).HashPassword,
+                    Salt = hashPassword.Salt,
+                    HashedPassword = hashPassword.HashPassword,
+                    Password = createUser.Password,
 
                 };
 
                 _context.Users.Add(user);
+            await _context.SaveChangesAsync();
             return Ok("User registered successfully");
 
 
@@ -62,14 +68,16 @@ namespace Backend_Pixel_Crawler.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == login.Username);
+            var authenticationState = await _userAuthenticationService.AuthenticateUserAsync(login.Username, login.Password);
 
-                var isValidPassword = _passwordHasher.VerifyPassword(login.Password, user.HashedPassword, user.Salt);
-
-            if (isValidPassword)
+            if (authenticationState.IsAuthenticated)
             {
-
+                    
+                   
+                return Ok(new { authenticationState.Token });
             }
+
+            return BadRequest("Username or Password incorrect");
             }
 
 

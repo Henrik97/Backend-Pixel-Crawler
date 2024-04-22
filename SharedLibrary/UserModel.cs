@@ -8,12 +8,14 @@ namespace SharedLibrary
 {
     public class UserModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Email { get; set; } = string.Empty;
         public string Username { get; set; }
 
         public byte[] Salt { get; set; }
-        public string HashedPassword { get; set; } // skal ændres til hashed passwords siden man ikke må gemme det direkte.
+        public string HashedPassword { get; set; }
+
+        public string Password { get; set; }
     }
 }

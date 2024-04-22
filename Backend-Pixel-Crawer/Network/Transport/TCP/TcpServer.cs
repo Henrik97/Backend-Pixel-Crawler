@@ -17,10 +17,10 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         public TcpServer()
         {
             _connectedClients = new List<TcpClient>();
-            StartServer();
+ 
         }
 
-        public void StartServer()
+        public async Task StartServer(CancellationToken stoppingToken)
 
         {
             int port = 13000;
@@ -30,18 +30,18 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
             Console.WriteLine("Server started...");
 
-            while (true)
+            while (!stoppingToken.IsCancellationRequested)
             {
-                TcpClient client = _tcpListener.AcceptTcpClient();                
+                TcpClient client = await _tcpListener.AcceptTcpClientAsync();                
              //   ThreadPool.QueueUserWorkItem(HandleClient, client);
                 _connectedClients.Add(client); // Add client to list of connected clients
                 Console.WriteLine("New client connected.");
-                Task.Run(() => HandleClient(client));
+                var _ = HandleClientAsync(client, stoppingToken);
             }
         }
 
 
-        private void HandleClient(TcpClient client)
+        private async Task HandleClientAsync(TcpClient client, CancellationToken stoppingToken)
         {
             Console.WriteLine("Handling client...");
 

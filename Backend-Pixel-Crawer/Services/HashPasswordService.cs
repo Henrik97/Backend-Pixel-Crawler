@@ -13,16 +13,16 @@ namespace Backend_Pixel_Crawler.Services
 
             // fra .net documentation
             byte[] salt = RandomNumberGenerator.GetBytes(128 / 8);
-            Console.WriteLine($"Salt: {Convert.ToBase64String(salt)}");
 
             string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-                password: password!,
+                password: password,
                 salt: salt,
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 100000,
                 numBytesRequested: 256 / 8));
 
-        return new PasswordResultModel
+
+            return new PasswordResultModel
         {
             HashPassword = hashedPassword,
             Salt = salt
@@ -31,14 +31,14 @@ namespace Backend_Pixel_Crawler.Services
 
         public bool VerifyPassword(string password, string storedHashPassword, byte[] storedSalt)
         {
-         string hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
+         string hashedPassword = Convert.ToBase64String(KeyDerivation.Pbkdf2(
          password: password,
          salt: storedSalt,
          prf: KeyDerivationPrf.HMACSHA256,
          iterationCount: 100000,
          numBytesRequested: 256 / 8));
 
-            return hashed == storedHashPassword;
+            return hashedPassword == storedHashPassword;
         }
     }
 }
