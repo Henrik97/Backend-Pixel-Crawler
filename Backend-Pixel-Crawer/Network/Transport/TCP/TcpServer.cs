@@ -136,6 +136,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     Console.WriteLine($"action: {action}, playerID: {playerId}, JsonString: {content}");                    
                 }                
             }
+            
+            //finally{ }
 
             stream.Close();
             client.Close();
