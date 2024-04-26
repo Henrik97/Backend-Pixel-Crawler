@@ -20,7 +20,7 @@ namespace Backend_Pixel_Crawler.Services
                 .SetSlidingExpiration(TimeSpan.FromHours(1));
             await _cache.SetStringAsync(userId.ToString(), token, options);
         }
-        public async Task<string> GetUserIdByTokenAsync(string token)
+        public async Task<string> GetTokenAsync(string token)
         {
             return await _cache.GetStringAsync(token);
         }

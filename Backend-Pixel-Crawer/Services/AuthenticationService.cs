@@ -3,6 +3,7 @@ using Backend_Pixel_Crawler.Interface;
 using Backend_Pixel_Crawler.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend_Pixel_Crawler.Services
 {
@@ -39,6 +40,25 @@ namespace Backend_Pixel_Crawler.Services
                 }
             };
             return (false, null); 
+        }
+
+        public bool AuthenticateUsersToken(string token)
+        {
+            var principal = _tokenService.ValidateToken(token);
+            if (principal == null)
+            {
+                Console.WriteLine("Invalid token.");
+                return false;
+            }
+
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("User ID not found in token.");
+                return false;
+            }
+
+            return _tokenService.DoesTokenExist(userId, token);
         }
     }
 }

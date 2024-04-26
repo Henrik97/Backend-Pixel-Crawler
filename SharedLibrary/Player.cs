@@ -5,25 +5,21 @@ namespace SharedLibrary
 {
     public class Player
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public TcpClient TcpClient { get; set; }  
+        public string PlayerId { get; set; }
 
-        public Player(string id, string name, TcpClient tcpClient) {
+        public string PlayerName { get; set; }
 
-            Id = id;
-            Name = name;
-            TcpClient = tcpClient;  
-        }
+        public string UserID { get; set; }
 
-        public void SendMessage(string message)
-        {
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-           
-            NetworkStream stream = TcpClient.GetStream();
+        public string CurrentLobyId { get; set; }
 
-            stream.Write(buffer, 0, buffer.Length);
-        }
+        public Player(string playerId, string playerName, string userID) {
+
+            PlayerId = playerId;
+            PlayerName = playerName;
+            UserID = userID;
+
+            }
 
     }
 

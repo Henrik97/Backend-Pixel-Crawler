@@ -33,7 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Managers\" />
     <Folder Include="Migrations\" />
   </ItemGroup>
 

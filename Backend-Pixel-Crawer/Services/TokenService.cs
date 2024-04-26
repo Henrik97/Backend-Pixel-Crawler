@@ -1,4 +1,5 @@
 ﻿using Backend_Pixel_Crawler.Interface;
+using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Tokens;
 using SharedLibrary;
 using System.IdentityModel.Tokens.Jwt;
@@ -10,10 +11,13 @@ namespace Backend_Pixel_Crawler.Services
     public class TokenService : ITokenService
     {
         IConfiguration _configuration;
+        ITokenCacheService _tokenCacheService;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService(IConfiguration configuration, ITokenCacheService cacheService)
         {
             _configuration = configuration;
+            _tokenCacheService = cacheService;
+
         }
         public string GenerateToken(UserModel user)
         {
@@ -36,9 +40,47 @@ namespace Backend_Pixel_Crawler.Services
             return tokenHandler.WriteToken(token); ;
         }
 
-        public bool ValidateToken(string token)
+        public ClaimsPrincipal ValidateToken(string token)
         {
-            return false;
+
+            string _secretKey = _configuration["Jwt:Key"];
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero  // Optional: reduce or eliminate clock skew allowance
+            };
+
+            try
+            {
+                SecurityToken validatedToken;
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+                return principal; // Return the principal for further processing
+            }
+            catch (Exception)
+            {
+                return null; // Token validation failed
+            }
         }
+
+        public bool DoesTokenExist(string userId, string incomingToken)
+        {
+            string storedToken = _tokenCacheService.GetTokenAsync(userId).ToString();
+
+            if (string.IsNullOrEmpty(storedToken))
+            {
+                return false; // token blev ikke fundet
+            }
+
+            return storedToken == incomingToken;
+
+        }
+
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
@@ -13,34 +14,55 @@ namespace SharedLibrary
 
         public string LobbyName { get; set; }    
         public string HostName { get; set; }
-        public List<Player> Players { get; set; }
+        public List<TCPSession> ConnectedSession { get; set; }
+
+        public Dictionary<string, Player> Players { get; set; }
         public bool isGameStarted { get; set; }
 
-        public Lobby(string lobbyId, string lobbyName, string hostName) {
+        public Lobby( string lobbyName, string hostName) {
 
-            LobbyId = lobbyId;
+            LobbyId = Guid.NewGuid().ToString();
             LobbyName = lobbyName;
             HostName = hostName;
-            Players = new List<Player>();
+            ConnectedSession = new List<TCPSession>();
+            Players = new Dictionary<string, Player>();
             isGameStarted = false;
         
         }
 
-        public void AddPlayer(Player player) {
+        public void AddPlayer(TCPSession session)
+        {
 
-            BroadcastMessage($"Player {player.Name} has joined the lobby.", player);
+            if (!Players.ContainsKey(session.Player.UserID))
+            {
+                ConnectedSession.Add(session);
+                Players[(session.Player.UserID)] = session.Player;
+                session.Player.CurrentLobyId = LobbyId;
+            }
 
-            Players.Add(player);
+
+            BroadcastMessage($"Player {session.Player.PlayerName} has joined the lobby.", session.Player);
 
         }
 
-        public void RemovePlayer(Player player) { }
+        public void RemovePlayer(TCPSession session) {
+
+            ConnectedSession.Remove(session);
+            if (Players.ContainsKey(session.Player.UserID))
+            {
+                Players.Remove(session.Player.UserID);
+                session.Player.CurrentLobyId = null;
+            }
+        }
 
         public void BroadcastMessage(string message, Player excludedPlayer = null) { 
             
-            foreach (Player player in Players) {
-                player.SendMessage(message);
-            
+            foreach (TCPSession session in ConnectedSession) {
+
+                if (session.Player != excludedPlayer)
+                    session.SendAsync(message);
+
+                else return;
             }
         
         }
