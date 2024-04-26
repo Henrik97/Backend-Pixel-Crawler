@@ -8,7 +8,7 @@ namespace SharedLibrary
 {
     public class TCPServerSettings
     {
-        public string HostAdress { get; set; }
+        public string HostAddress { get; set; }
         public int Port { get; set; }
 
     }

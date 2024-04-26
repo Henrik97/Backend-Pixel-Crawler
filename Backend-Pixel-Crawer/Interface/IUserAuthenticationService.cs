@@ -3,6 +3,6 @@
     public interface IUserAuthenticationService
     {
         Task<(bool IsAuthenticated, string Token)> AuthenticateUserAsync(string username, string password);
-        bool AuthenticateUsersToken(string token);
+        Task<bool> AuthenticateUsersTokenAsync(string token);
     }
 }

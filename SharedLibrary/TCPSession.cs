@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -47,15 +49,50 @@ namespace SharedLibrary
 
         public async Task<TCPCommand> ReceiveCommandAsync(CancellationToken cancellationToken)
         {
+            var completeMessage = new StringBuilder();
             byte[] buffer = new byte[4096];
-            int bytesRead = await Stream.ReadAsync(buffer, 0, buffer.Length);
-            string json = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            int bytesRead;
 
-            UpdateLastStreamActivity();
+            string delimiter = "\n";
 
             try
             {
-                TCPCommand command = JsonSerializer.Deserialize<TCPCommand>(json);
+                do
+                {
+                    bytesRead = await Stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+                    string segment = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    completeMessage.Append(segment);
+
+                    // If the delimiter is found, we've reached the end of the command.
+                    if (segment.IndexOf('}') != -1)
+                    {
+                        // Possible end of JSON object detected
+                        // Verify it is not within a string by checking the number of quotes
+                        int quotesBeforeBracket = segment.Substring(0, segment.IndexOf('}')).Count(c => c == '"');
+                        if (quotesBeforeBracket % 2 == 0)
+                        {
+                            // Even number of quotes means the bracket is not within a string
+                            break;
+                        }
+                    }
+                }
+                while (bytesRead > 0); // Continue reading until the stream ends.
+
+                // Trim the complete message to remove the delimiter at the end.
+                string fullJsonCommand = completeMessage.ToString().TrimEnd('\n', '\r', ' ');
+
+
+                Console.WriteLine($"JSON received: {fullJsonCommand}");
+
+                // Update the last stream activity after receiving a full command.
+                UpdateLastStreamActivity();
+
+                // Deserialize the full JSON command into a TCPCommand object.
+                TCPCommand command = JsonSerializer.Deserialize<TCPCommand>(fullJsonCommand);
+
+                // Log the command for debugging purposes.
+                Console.WriteLine(command);
+
                 return command;
             }
             catch (JsonException ex)
@@ -73,3 +110,5 @@ namespace SharedLibrary
         }
     }
 }
+
+

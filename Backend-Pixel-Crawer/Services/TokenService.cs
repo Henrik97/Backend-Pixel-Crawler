@@ -24,7 +24,7 @@ namespace Backend_Pixel_Crawler.Services
            var _secretKey = _configuration["Jwt:Key"];
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_secretKey);
+            var key = Encoding.UTF8.GetBytes(_secretKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -54,27 +54,29 @@ namespace Backend_Pixel_Crawler.Services
                 IssuerSigningKey = key,
                 ValidateIssuer = false,
                 ValidateAudience = false,
-                ClockSkew = TimeSpan.Zero  // Optional: reduce or eliminate clock skew allowance
             };
+
+            Console.WriteLine(token);
+
 
             try
             {
                 SecurityToken validatedToken;
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
-                return principal; // Return the principal for further processing
+                return principal; 
             }
             catch (Exception)
             {
-                return null; // Token validation failed
+                return null;
             }
         }
 
-        public bool DoesTokenExist(string userId, string incomingToken)
+        public async Task<bool> DoesTokenExist(string userId, string incomingToken)
         {
-            string storedToken = _tokenCacheService.GetTokenAsync(userId).ToString();
+            string storedToken = await _tokenCacheService.GetTokenAsync(userId);
 
             if (string.IsNullOrEmpty(storedToken))
-            {
+            { 
                 return false; // token blev ikke fundet
             }
 

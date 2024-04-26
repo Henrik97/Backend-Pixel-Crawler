@@ -8,6 +8,6 @@ namespace Backend_Pixel_Crawler.Interface
         string GenerateToken(UserModel user);
         ClaimsPrincipal ValidateToken(string token);
 
-        bool DoesTokenExist(string userId, string incomingToken);
+        Task<bool> DoesTokenExist(string userId, string incomingToken);
     }
 }

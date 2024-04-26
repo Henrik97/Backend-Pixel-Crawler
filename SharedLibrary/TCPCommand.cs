@@ -10,19 +10,21 @@ namespace SharedLibrary
 {
     public class TCPCommand
     {
-        public CommandType Command { get; set; }
-        public string PlayerId { get; set; }
+        public string Command { get; set; }
+        public string? PlayerId { get; set; }
         public string PlayerName { get; set; }
-        public string LobbyId { get; set; }
+        public string? LobbyId { get; set; }
 
         public string LobbyName { get; set; }
 
         //Movement related hvis vi vælger at bruge JSON
-        public string Direction { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
+        public string? Direction { get; set; }
+        public int? X { get; set; }
+        public int? Y { get; set; }
 
     }
+
+    // Kunne ikke få json converter til at genknde enumTyper så endte med at bruge string
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum CommandType
     {

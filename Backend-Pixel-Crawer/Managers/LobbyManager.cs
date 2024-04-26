@@ -13,6 +13,8 @@ namespace Backend_Pixel_Crawler.Managers
 
             Lobbies.Add(lobby.LobbyId, lobby);
 
+            Console.WriteLine("New Lobby Was created");
+
             return lobby;
         }
 

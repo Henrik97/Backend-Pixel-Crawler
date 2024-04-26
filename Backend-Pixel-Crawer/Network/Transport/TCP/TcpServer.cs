@@ -34,7 +34,12 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         {
             TCPServerSettings tcpServerSettings = _configuration.GetSection("TcpServerSettings").Get<TCPServerSettings>();
             int port = tcpServerSettings.Port;
-            string hostAddress = tcpServerSettings.HostAdress;
+            string hostAddress = tcpServerSettings.HostAddress;
+
+            if (tcpServerSettings == null || string.IsNullOrEmpty(tcpServerSettings.HostAddress))
+            {
+                throw new InvalidOperationException("TCP server settings are not configured correctly.");
+            }
             _tcpListener = new TcpListener(System.Net.IPAddress.Parse(hostAddress), port);
             _tcpListener.Start();
 
@@ -62,8 +67,9 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
                     string token = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
+                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
 
-                    if (_userAuthenticationService.AuthenticateUsersToken(token))
+                    if (userAuth)
                     {
                         Console.WriteLine("Token is valid. Client authenticated.");
                         var session = new TCPSession(client);
@@ -73,6 +79,12 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                         session.SendAsync(AuthenticatedMessage);
 
                         _sessionManager.AddSession(session);
+
+                        while (_sessionManager.GetSession(session.SessionId) != null)
+                        {
+                          await  AuthenticatedSessionCommands(session, stoppingToken);
+                        }
+
 
                     }
                     else
@@ -107,16 +119,16 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     switch (command.Command)
                     {
-                        case CommandType.JoinLobby:
+                        case "JOIN":
                             _lobbiesManager.JoinLobby(command.LobbyId, session);
                             break;
-                        case CommandType.CreateLobby:
+                        case "CREATE":
                             _lobbiesManager.CreateLobby(command.LobbyName, command.PlayerName);
                             break;
-                        case CommandType.ListLobbies:
+                        case "LIST_LOBBIES":
                             _lobbiesManager.GetAllLobies();
                             break;
-                        case CommandType.LeaveLobby:
+                        case "LEAVE":
                             _lobbiesManager.LeaveLobby(command.LobbyId, session);
                             break;
 

@@ -42,7 +42,7 @@ namespace Backend_Pixel_Crawler.Services
             return (false, null); 
         }
 
-        public bool AuthenticateUsersToken(string token)
+        public async Task<bool> AuthenticateUsersTokenAsync(string token)
         {
             var principal = _tokenService.ValidateToken(token);
             if (principal == null)
@@ -58,7 +58,11 @@ namespace Backend_Pixel_Crawler.Services
                 return false;
             }
 
-            return _tokenService.DoesTokenExist(userId, token);
+            Console.WriteLine("token Worked");
+
+            Console.WriteLine(_tokenService.DoesTokenExist(userId, token));
+
+            return await _tokenService.DoesTokenExist(userId, token);
         }
     }
 }
