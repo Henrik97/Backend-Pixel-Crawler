@@ -69,10 +69,19 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
 
+                    
+
                     if (userAuth)
-                    {
+                    { /*
+                        var player = new Player
+                        {
+                            PlayerId = "1",
+                            PlayerName = "Bob",
+                            UserID = "1"
+                        };
+                        */
                         Console.WriteLine("Token is valid. Client authenticated.");
-                        var session = new TCPSession(client);
+                        var session = new TCPSession(client, player);
 
                         string AuthenticatedMessage = "You are authenticated and a session is created";
 

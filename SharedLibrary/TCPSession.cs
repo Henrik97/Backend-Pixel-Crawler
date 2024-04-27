@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -22,11 +23,12 @@ namespace SharedLibrary
 
         public Player Player { get; set; } 
 
-        public TCPSession(TcpClient client) { 
+        public TCPSession(TcpClient client, Player player) { 
         
             Client = client;
             Stream = client.GetStream();
             SessionId = Guid.NewGuid().ToString();
+            Player = player;
             LastStreamActivity = DateTime.Now;
         }
 
