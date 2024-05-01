@@ -45,6 +45,14 @@ namespace Backend_Pixel_Crawler.Managers
             return false;
         }
 
+        public void MovementUpdate(string lobbyId, TCPSession session )
+        {
+            Lobby lobby = Lobbies[lobbyId];
+            // Notify all other players in the lobby about the new move
+            string newPlayerSpawnCommand = $"{{\"command\":\"MOVEMENT\", \"playerId\":\"{session.Player.PlayerId}\"}}";
+            lobby.BroadcastMessage(newPlayerSpawnCommand, session.Player);
+        }
+
         public bool LeaveLobby(string lobbyId, TCPSession session) {
 
             if (Lobbies.ContainsKey(lobbyId))
