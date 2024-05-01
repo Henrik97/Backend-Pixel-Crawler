@@ -48,14 +48,14 @@ namespace Backend_Pixel_Crawler.Services
             if (principal == null)
             {
                 Console.WriteLine("Invalid token.");
-                return true;
+                return false;
             }
 
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("User ID not found in token.");
-                return true;
+                return false;
             }
 
             Console.WriteLine("token Worked");
