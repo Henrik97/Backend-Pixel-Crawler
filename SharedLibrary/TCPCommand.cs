@@ -17,6 +17,9 @@ namespace SharedLibrary
 
         public string LobbyName { get; set; }
 
+
+        
+
         //Movement related hvis vi vælger at bruge JSON
         public string? Direction { get; set; }
         public int? X { get; set; }
@@ -39,6 +42,8 @@ namespace SharedLibrary
         [EnumMember(Value = "SENDMESSAGE")]
         SendMessage,
         [EnumMember(Value = "MOVEMENT")]
-        Movement
+        Movement,
+        [EnumMember(Value = "REGISTER")] 
+        Register
     }
 }

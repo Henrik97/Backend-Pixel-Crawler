@@ -22,7 +22,23 @@ namespace Backend_Pixel_Crawler.Managers
         {
             if(Lobbies.ContainsKey(lobbyId))
             {
-                Lobbies[lobbyId].AddPlayer(session);
+                Lobby lobby = Lobbies[lobbyId];
+                // Add the player to the ConnectedSession list and Players dictionary
+                lobby.AddPlayer(session);
+
+                // Notify all other players in the lobby about the new player
+                string newPlayerSpawnCommand = $"{{\"command\":\"SPAWN_PLAYER\", \"playerId\":\"{session.Player.PlayerId}\"}}";
+                lobby.BroadcastMessage(newPlayerSpawnCommand, session.Player);
+
+                // Notify the new player about all existing players
+                foreach (var existingSession in lobby.ConnectedSession)
+                {
+                    if (existingSession != session)  // Ensure not to include the new player
+                    {
+                        string existingPlayerSpawnCommand = $"{{\"command\":\"SPAWN_PLAYER\", \"playerId\":\"{existingSession.Player.PlayerId}\"}}";
+                        session.SendAsync(existingPlayerSpawnCommand);
+                    }
+                }
                 return true;
             }
 

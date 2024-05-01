@@ -1,5 +1,6 @@
 ﻿using Backend_Pixel_Crawler.Interface;
 using Backend_Pixel_Crawler.Managers;
+using Backend_Pixel_Crawler.Services;
 using SharedLibrary;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         IUserAuthenticationService _userAuthenticationService;
         LobbyManager _lobbiesManager;
         TCPSessionManager _sessionManager;
+        UserService _userService;
+        CreateUserModel _createUserModel;
         IConfiguration _configuration;
         public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration)
         {
@@ -120,7 +123,12 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     switch (command.Command)
                     {
                         case "JOIN":
+                            Console.WriteLine("Entered the JOIN case");
+
                             _lobbiesManager.JoinLobby(command.LobbyId, session);
+                           // string invalidTokenMessage = ("SPAWN_PLAYER", command.PlayerId);
+                          //  byte[] data = Encoding.UTF8.GetBytes(invalidTokenMessage);
+
                             break;
                         case "CREATE":
                             _lobbiesManager.CreateLobby(command.LobbyName, command.PlayerName);
@@ -130,10 +138,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                             break;
                         case "LEAVE":
                             _lobbiesManager.LeaveLobby(command.LobbyId, session);
-                            break;
-
-
-
+                            break;                      
                     }
                 }
             }
