@@ -106,13 +106,11 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             {
 
                 Console.WriteLine(ex.ToString());
-
             }
         }
 
         private async Task AuthenticatedSessionCommands(TCPSession session, CancellationToken stoppingToken)
         {
-
             try
             {
                 while (!stoppingToken.IsCancellationRequested)
@@ -142,7 +140,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                         case "MOVEMENT":
                             _lobbiesManager.MovementUpdate(command.LobbyId, session);
                             break;
-
                     }
                 }
             }

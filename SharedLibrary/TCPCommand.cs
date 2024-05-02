@@ -43,7 +43,6 @@ namespace SharedLibrary
         SendMessage,
         [EnumMember(Value = "MOVEMENT")]
         Movement,
-        [EnumMember(Value = "REGISTER")] 
-        Register
+        
     }
 }

@@ -11,7 +11,7 @@ namespace SharedLibrary
 
         public string UserID { get; set; }
 
-        public string CurrentLobyId { get; set; }
+        public string CurrentLobbyId { get; set; }
 
         public Player(string playerId, string playerName, string userID) {
 
