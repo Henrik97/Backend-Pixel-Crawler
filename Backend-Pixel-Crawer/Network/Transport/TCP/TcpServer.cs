@@ -72,14 +72,14 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     
 
                     if (userAuth)
-                    { /*
-                        var player = new Player
+                    { 
+                        var player = new Player("1", "bob", "1")
                         {
                             PlayerId = "1",
                             PlayerName = "Bob",
                             UserID = "1"
                         };
-                        */
+                        
                         Console.WriteLine("Token is valid. Client authenticated.");
                         var session = new TCPSession(client, player);
 
