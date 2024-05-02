@@ -5,17 +5,17 @@ namespace SharedLibrary
 {
     public class Player
     {
-        public string PlayerId { get; set; }
+        public string PlayerId { get; set; } = Guid.NewGuid().ToString();
 
         public string PlayerName { get; set; }
 
         public string UserID { get; set; }
 
-        public string CurrentLobyId { get; set; }
+        public string? CurrentLobbyId { get; set; }
 
-        public Player(string playerId, string playerName, string userID) {
+        public Player() { }
+        public Player( string playerName, string userID) {
 
-            PlayerId = playerId;
             PlayerName = playerName;
             UserID = userID;
 

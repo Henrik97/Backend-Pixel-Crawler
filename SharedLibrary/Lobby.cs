@@ -37,7 +37,7 @@ namespace SharedLibrary
             {
                 ConnectedSession.Add(session);
                 Players[(session.Player.UserID)] = session.Player;
-                session.Player.CurrentLobyId = LobbyId;
+                session.Player.CurrentLobbyId = LobbyId;
             }
 
 
@@ -51,7 +51,7 @@ namespace SharedLibrary
             if (Players.ContainsKey(session.Player.UserID))
             {
                 Players.Remove(session.Player.UserID);
-                session.Player.CurrentLobyId = null;
+                session.Player.CurrentLobbyId = null;
             }
         }
 

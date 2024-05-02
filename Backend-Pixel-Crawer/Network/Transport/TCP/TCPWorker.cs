@@ -1,6 +1,7 @@
 ﻿
 using Backend_Pixel_Crawler.Interface;
 using Backend_Pixel_Crawler.Managers;
+using Backend_Pixel_Crawler.Services;
 using Microsoft.Extensions.Configuration;
 
 namespace Backend_Pixel_Crawler.Network.Transport.TCP
@@ -13,7 +14,9 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         private readonly LobbyManager _lobbyManager;
         private readonly TCPSessionManager _sessionManager;
         private readonly IConfiguration _configuration;
+        private readonly PlayerService _playerService;
         private TcpServer _server;
+
 
 
         public TCPWorker(ILogger<TCPWorker> logger, IServiceScopeFactory serviceScopeFactory, IConfiguration configuration)
@@ -34,11 +37,13 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     var userAuthenticationService = scope.ServiceProvider.GetRequiredService<IUserAuthenticationService>();
                     var lobbyManager = scope.ServiceProvider.GetRequiredService<LobbyManager>();
                     var sessionManager = scope.ServiceProvider.GetRequiredService<TCPSessionManager>();
+                    var playerService = scope.ServiceProvider.GetRequiredService<PlayerService>();
                     _server = new TcpServer(
                            userAuthenticationService,
                            lobbyManager,
                            sessionManager,
-                           _configuration);
+                           _configuration,
+                             playerService);
 
 
                     await _server.StartServer(stoppingToken);

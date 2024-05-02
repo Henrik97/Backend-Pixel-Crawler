@@ -64,5 +64,18 @@ namespace Backend_Pixel_Crawler.Services
 
             return await _tokenService.DoesTokenExist(userId, token);
         }
+
+        public async Task<string> GetUserIdFromToken(string token)
+        {
+            var principal = _tokenService.ValidateToken(token);
+
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? principal.FindFirst("sub")?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("User ID not found in token.");
+                return null;
+            }
+            return userId;
+        }
     }
 }

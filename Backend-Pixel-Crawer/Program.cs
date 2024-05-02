@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IPasswordHasher, HashPasswordService>();
 builder.Services.AddScoped<IUserAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<PlayerService>();
 builder.Services.AddSingleton<ITokenCacheService, RedisTokenCacheService>();
 builder.Services.AddScoped<TCPSessionManager>();
 builder.Services.AddScoped<LobbyManager>();
