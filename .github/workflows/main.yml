@@ -23,6 +23,12 @@ jobs:
         dotnet build --no-restore --configuration Release
         dotnet publish --configuration Release --output publish
 
+    - name: Install SSH Client
+      run: sudo apt-get install -y openssh-client
+
+    - name: Check SSH Installation
+      run: ssh -V
+
     - name: Deploy to Server
       uses: appleboy/scp-action@master
       with:
@@ -30,8 +36,10 @@ jobs:
         username: "hwo"  # Replace with the SSH username
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
-        source: "publish/*"
+        source: "./publish/*"
         target: "/home/hwo/backend-pixel-crawler/"
+        env:
+        DEBUG: true
 
     - name: Restart Application
       uses: appleboy/ssh-action@master
