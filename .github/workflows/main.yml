@@ -38,23 +38,33 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} echo "SSH connection successful"
 
-    - name: Deploy to Server with rsync
+    - name: Create tarball of publish directory
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" "." hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/backend-pixel-crawler/
+        mkdir -p ../build
+        cp -r ./publish/* ../build/
+        tar -czvf deploy.tar.gz -C ../build .
 
-
-
-
-    - name: Deploy to Server
+    - name: Deploy tarball to server
       uses: appleboy/scp-action@master
       with:
-        host: "130.225.170.52"
-        username: "hwo"  # Replace with the SSH username
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
-        source: "./publish/*"
-        target: "/home/hwo/backend-pixel-crawler/"
-        debug: true
+        source: "deploy.tar.gz"
+        target: "/home/gruppe-20/"
+
+    - name: Extract tarball on server and cleanup
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 10300
+        script: |
+          mkdir -p /home/gruppe-20/backend-pixel-crawler
+          tar -xzvf /home/gruppe-20/deploy.tar.gz -C /home/gruppe-20/backend-pixel-crawler
+          rm /home/gruppe-20/deploy.tar.gz
 
     - name: Restart Application
       uses: appleboy/ssh-action@master
@@ -67,3 +77,7 @@ jobs:
           cd /home/hwo/backend-pixel-crawler
           # Add the command to restart your application, e.g.,
           sudo systemctl restart backend-pixel-crawler.dll
+    - name: Cleanup Key File
+      run: rm /tmp/github-actions-deploy-key
+      if: always()  # Ensures cleanup runs even if the previous steps fail
+      shell: bash
