@@ -40,7 +40,7 @@ jobs:
 
     - name: Deploy to Server with rsync
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" ./publish/ hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/backend-pixel-crawler/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" "." hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/backend-pixel-crawler/
 
 
 
