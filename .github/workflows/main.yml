@@ -29,8 +29,11 @@ jobs:
     - name: Check SSH Installation
       run: ssh -V
 
-    - name: Check SCP Installation
-      run: scp -V
+    - name: Verify SCP Functionality
+      run: |
+        touch testfile && \
+        scp -o StrictHostKeyChecking=no -i ~/.ssh/github-actions-deploy-key -P 10300 testfile hwo@${{ secrets.SERVER_IP }}:/home/hwo/testfile && \
+        ssh -o StrictHostKeyChecking=no -i ~/.ssh/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} "ls /home/hwo-20/testfile && rm /home/hwo/testfile"
 
     - name: Deploy to Server
       uses: appleboy/scp-action@master
@@ -41,7 +44,6 @@ jobs:
         port: 10300
         source: "./publish/*"
         target: "/home/hwo/backend-pixel-crawler/"
-        env:
         debug: true
 
     - name: Restart Application
