@@ -23,7 +23,7 @@ jobs:
         dotnet build --no-restore --configuration Release
         dotnet publish --configuration Release --output publish
 
-  - name: Install SSH Client
+    - name: Install SSH Client
       run: sudo apt-get install -y openssh-client
 
     - name: Check SSH Installation
