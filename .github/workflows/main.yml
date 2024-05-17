@@ -46,7 +46,7 @@ jobs:
 
     - name: Deploy tarball to server using rsync
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" deploy.tar.gz hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" deploy.tar.gz hwo@${{ secrets.SERVER_IP }}:/home/hwo/
 
     - name: Extract tarball on server and cleanup
       uses: appleboy/ssh-action@master
@@ -56,9 +56,9 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
         script: |
-          mkdir -p /home/gruppe-20/backend-pixel-crawler
-          tar -xzvf /home/gruppe-20/deploy.tar.gz -C /home/gruppe-20/backend-pixel-crawler
-          rm /home/gruppe-20/deploy.tar.gz
+          mkdir -p /home/hwo/backend-pixel-crawler
+          tar -xzvf /home/hwo/deploy.tar.gz -C /home/hwo/backend-pixel-crawler
+          rm /home/hwo/deploy.tar.gz
 
     - name: Restart Application
       uses: appleboy/ssh-action@master
