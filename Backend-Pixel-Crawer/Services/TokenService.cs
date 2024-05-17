@@ -21,7 +21,7 @@ namespace Backend_Pixel_Crawler.Services
             _configuration = configuration;
             _tokenCacheService = cacheService;
             //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
-            if (_secretKey == null)
+           /* if (_secretKey == null)
             {
                 // Handle the case where the environmental variable is not set
                 // This could include logging an error message or throwing an exception
@@ -32,7 +32,7 @@ namespace Backend_Pixel_Crawler.Services
             else
             {
                 Console.WriteLine("JWT Key: " + _secretKey);
-            }
+            }*/
         }
 
         public string GenerateToken(UserModel user)
@@ -58,6 +58,7 @@ namespace Backend_Pixel_Crawler.Services
         public ClaimsPrincipal ValidateToken(string token)
         {
             Console.WriteLine(token);
+
  
             var keyString = _configuration["Jwt:Key"];
             if (string.IsNullOrEmpty(keyString))
