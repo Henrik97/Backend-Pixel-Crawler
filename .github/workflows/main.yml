@@ -44,9 +44,12 @@ jobs:
         cp -r ./publish/* ../build/
         tar -czvf deploy.tar.gz -C ../build .
 
+    - name: Check rsync installation
+      run: rsync --version
+
     - name: Deploy tarball to server using rsync
       run: |
-        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" deploy.tar.gz hwo@${{ secrets.SERVER_IP }}:/home/hwo/
+        rsync -avz --debug=ALL -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 -vvv" deploy.tar.gz hwo@${{ secrets.SERVER_IP }}:
 
     - name: Extract tarball on server and cleanup
       uses: appleboy/ssh-action@master
@@ -71,6 +74,7 @@ jobs:
           cd /home/hwo/backend-pixel-crawler
           # Add the command to restart your application, e.g.,
           sudo systemctl restart backend-pixel-crawler.dll
+
     - name: Cleanup Key File
       run: rm /tmp/github-actions-deploy-key
       if: always()  # Ensures cleanup runs even if the previous steps fail
