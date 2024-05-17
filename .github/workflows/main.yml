@@ -42,7 +42,7 @@ jobs:
       run: |
         touch testfile && \
         scp -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -P 10300 testfile hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/testfile && \
-        ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} "ls /home/gruppe-20/testfile && rm /home/gruppe-20/testfile"
+        ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} "ls /home/gruppe-20/testfile && rm /home/gruppe-20/testfile
 
 
     - name: Deploy to Server
