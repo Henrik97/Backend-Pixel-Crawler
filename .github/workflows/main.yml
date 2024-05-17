@@ -23,8 +23,8 @@ jobs:
         dotnet build --no-restore --configuration Release
         dotnet publish --configuration Release --output publish
 
-    - name: Install SSH Client
-      run: sudo apt-get update && sudo apt-get install -y openssh-client
+    - name: Install rsync
+      run: sudo apt-get update && sudo apt-get install -y rsync
 
     - name: Create SSH Key File
       run: echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/github-actions-deploy-key
@@ -38,11 +38,10 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} echo "SSH connection successful"
 
-    - name: Verify SCP Functionality
+    - name: Deploy to Server with rsync
       run: |
-        touch testfile
-        scp -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -P 10300 testfile hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/testfile
-        ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300 hwo@${{ secrets.SERVER_IP }} "ls /home/gruppe-20/testfile && rm /home/gruppe-20/testfile"
+        rsync -avz -e "ssh -o StrictHostKeyChecking=no -i /tmp/github-actions-deploy-key -p 10300" ./publish/ hwo@${{ secrets.SERVER_IP }}:/home/gruppe-20/backend-pixel-crawler/
+
 
 
 
