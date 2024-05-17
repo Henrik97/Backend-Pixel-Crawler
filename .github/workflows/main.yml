@@ -31,7 +31,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
         source: "publish/*"
-        target: "/home/gruppe-20/backend-pixel-crawler/"
+        target: "/home/hwo/backend-pixel-crawler/"
 
     - name: Restart Application
       uses: appleboy/ssh-action@master
