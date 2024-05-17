@@ -41,6 +41,6 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
         script: |
-          cd /home/gruppe-20/backend-pixel-crawler
+          cd /home/hwo/backend-pixel-crawler
           # Add the command to restart your application, e.g.,
           sudo systemctl restart backend-pixel-crawler.dll
