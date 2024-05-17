@@ -57,30 +57,42 @@ namespace Backend_Pixel_Crawler.Services
 
         public ClaimsPrincipal ValidateToken(string token)
         {
-
-           var cleanToken =  SanitizeToken(token);
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            Console.WriteLine(token);
+ 
+            var keyString = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(keyString))
+            {
+                throw new InvalidOperationException("JWT key is not configured properly.");
+            }
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = key,
+                IssuerSigningKey = securityKey,
                 ValidateIssuer = false,
                 ValidateAudience = false,
+                ClockSkew = TimeSpan.Zero,
             };
 
             try
             {
-                SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(cleanToken, validationParameters, out validatedToken);
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
                 Console.WriteLine("Token is valid.");
                 return principal;
             }
+            catch (SecurityTokenException ex)
+            {
+                // Handle the exception based on your specific needs, e.g., logging, throwing a more specific exception, etc.
+                Console.WriteLine($"Token validation failed: {ex.Message}");
+                return null; // or throw;
+            }
             catch (Exception ex)
             {
-                Console.WriteLine($"Token validation failed: {ex.Message}");
-                return null;
+                // General exception handling, e.g., log and rethrow or return a custom result
+                Console.WriteLine($"An error occurred while validating the token: {ex.Message}");
+                return null; // or throw;
             }
         }
 
@@ -94,11 +106,6 @@ namespace Backend_Pixel_Crawler.Services
             }
 
             return storedToken == incomingToken;
-        }
-
-        public string SanitizeToken(string token)
-        {
-            return new string(token.Where(c => !char.IsControl(c) || c == '\t' || c == '\n' || c == '\r').ToArray());
         }
     }
 }
