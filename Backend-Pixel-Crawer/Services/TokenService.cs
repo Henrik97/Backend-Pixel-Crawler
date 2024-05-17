@@ -20,7 +20,7 @@ namespace Backend_Pixel_Crawler.Services
         {
             _configuration = configuration;
             _tokenCacheService = cacheService;
-            _secretKey = Environment.GetEnvironmentVariable("JWT_KEY");
+            //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
             if (_secretKey == null)
             {
                 // Handle the case where the environmental variable is not set
@@ -38,7 +38,8 @@ namespace Backend_Pixel_Crawler.Services
         public string GenerateToken(UserModel user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_secretKey);
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[]
@@ -47,7 +48,7 @@ namespace Backend_Pixel_Crawler.Services
                     new Claim(ClaimTypes.Name, user.Username)
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = credentials,
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
@@ -56,7 +57,9 @@ namespace Backend_Pixel_Crawler.Services
 
         public ClaimsPrincipal ValidateToken(string token)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
+
+           var cleanToken =  SanitizeToken(token);
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var validationParameters = new TokenValidationParameters
@@ -70,11 +73,13 @@ namespace Backend_Pixel_Crawler.Services
             try
             {
                 SecurityToken validatedToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out validatedToken);
+                var principal = tokenHandler.ValidateToken(cleanToken, validationParameters, out validatedToken);
+                Console.WriteLine("Token is valid.");
                 return principal;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"Token validation failed: {ex.Message}");
                 return null;
             }
         }
@@ -89,6 +94,11 @@ namespace Backend_Pixel_Crawler.Services
             }
 
             return storedToken == incomingToken;
+        }
+
+        public string SanitizeToken(string token)
+        {
+            return new string(token.Where(c => !char.IsControl(c) || c == '\t' || c == '\n' || c == '\r').ToArray());
         }
     }
 }
