@@ -65,7 +65,8 @@ namespace Backend_Pixel_Crawler.Services
             Console.WriteLine(jwt);
             var cleanJWT = SanitizeToken(jwt);
             var token = new JwtSecurityToken(jwt);
-
+            var isTheStringsEqual = cleanJWT.Equals(jwt);
+            Console.WriteLine("are the string equal: " + isTheStringsEqual);
             var keyString = _configuration["Jwt:Key"];
 
 
@@ -78,7 +79,9 @@ namespace Backend_Pixel_Crawler.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            Console.WriteLine(tokenHandler.CanReadToken(cleanJWT));
+            var tokenData = tokenHandler.ReadJwtToken(cleanJWT);
+
+            Console.WriteLine("can read the clean token" + tokenHandler.CanReadToken(cleanJWT));
 
             var validationParameters = new TokenValidationParameters
             {
