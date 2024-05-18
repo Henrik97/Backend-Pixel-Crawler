@@ -78,9 +78,8 @@ namespace Backend_Pixel_Crawler.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var tokenData = tokenHandler.ReadJwtToken(cleanJWT);
 
-            Console.WriteLine("can read the clean token" + tokenHandler.CanReadToken(cleanJWT));
+            Console.WriteLine("can read the clean token" + tokenHandler.ReadJwtToken(cleanJWT));
 
             var validationParameters = new TokenValidationParameters
             {
