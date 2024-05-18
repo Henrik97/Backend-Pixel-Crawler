@@ -20,25 +20,30 @@ namespace Backend_Pixel_Crawler.Services
         {
             _configuration = configuration;
             _tokenCacheService = cacheService;
-            //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
-           /* if (_secretKey == null)
+            _secretKey = _configuration["Jwt:Key"]; // Ensure this key is set in environment variables or secure store
+            if (string.IsNullOrEmpty(_secretKey))
             {
-                // Handle the case where the environmental variable is not set
-                // This could include logging an error message or throwing an exception
-                Console.WriteLine("JWT_KEY environmental variable is not set.");
-                // Optionally, throw an exception to stop execution
-                // throw new Exception("JWT_KEY environmental variable is not set.");
+                throw new InvalidOperationException("Secret key must be configured.");
             }
-            else
-            {
-                Console.WriteLine("JWT Key: " + _secretKey);
-            }*/
+            //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
+            /* if (_secretKey == null)
+             {
+                 // Handle the case where the environmental variable is not set
+                 // This could include logging an error message or throwing an exception
+                 Console.WriteLine("JWT_KEY environmental variable is not set.");
+                 // Optionally, throw an exception to stop execution
+                 // throw new Exception("JWT_KEY environmental variable is not set.");
+             }
+             else
+             {
+                 Console.WriteLine("JWT Key: " + _secretKey);
+             }*/
         }
 
         public string GenerateToken(UserModel user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -51,22 +56,29 @@ namespace Backend_Pixel_Crawler.Services
                 SigningCredentials = credentials,
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+
+            return tokenHandler.CreateEncodedJwt(tokenDescriptor);
         }
 
-        public ClaimsPrincipal ValidateToken(string token)
+        public ClaimsPrincipal ValidateToken(string jwt)
         {
-            Console.WriteLine(token);
+            Console.WriteLine(jwt);
 
- 
+            var token = new JwtSecurityToken(jwt);
+
             var keyString = _configuration["Jwt:Key"];
+
+
+
+            Console.WriteLine(keyString);
             if (string.IsNullOrEmpty(keyString))
             {
                 throw new InvalidOperationException("JWT key is not configured properly.");
             }
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
+
+            Console.WriteLine(tokenHandler.CanReadToken(jwt));
 
             var validationParameters = new TokenValidationParameters
             {
@@ -77,9 +89,10 @@ namespace Backend_Pixel_Crawler.Services
                 ClockSkew = TimeSpan.Zero,
             };
 
+
             try
             {
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+                var principal = tokenHandler.ValidateToken(jwt, validationParameters, out SecurityToken validatedToken);
                 Console.WriteLine("Token is valid.");
                 return principal;
             }
@@ -96,7 +109,7 @@ namespace Backend_Pixel_Crawler.Services
                 return null; // or throw;
             }
         }
-
+            
         public async Task<bool> DoesTokenExist(string userId, string incomingToken)
         {
             string storedToken = await _tokenCacheService.GetTokenAsync(userId);
