@@ -40,7 +40,7 @@ namespace SharedLibrary
                 session.Player.CurrentLobbyId = LobbyId;
             }
 
-
+            BroadcastMessage($"SPAWN_PLAYER, {session.Player.PlayerId}");
             BroadcastMessage($"Player {session.Player.PlayerName} has joined the lobby.", session.Player);
 
         }
@@ -53,6 +53,8 @@ namespace SharedLibrary
                 Players.Remove(session.Player.UserID);
                 session.Player.CurrentLobbyId = null;
             }
+            BroadcastMessage($"REMOVE_PLAYER, {session.Player.PlayerId}");
+            BroadcastMessage($"Player {session.Player.PlayerName} has left the lobby.", session.Player);
         }
 
         public void BroadcastMessage(string message, Player excludedPlayer = null) { 
@@ -66,5 +68,8 @@ namespace SharedLibrary
             }
         
         }
+
+       
+
     }
 }
