@@ -7,40 +7,52 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Specifies the runner environment.
+
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # Checks out your repository under $GITHUB_WORKSPACE.
 
     - name: Set up .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '8.0'  # Specify your .NET Core version
+        dotnet-version: '8.0'  # Replace this with your project's required .NET version.
 
-    - name: Build and Publish
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build the project
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Publish the project
+      run: dotnet publish --no-build --configuration Release --output ${{ github.workspace }}/publish
+
+    - name: Archive the published application
+      run: tar -czvf deploy.tar.gz -C ${{ github.workspace }}/publish .
+
+    - name: Install SSH Client (if not available)
+      run: sudo apt-get update && sudo apt-get install -y openssh-client rsync
+
+    - name: Create SSH Key File
       run: |
-        dotnet restore
-        dotnet build --no-restore --configuration Release
-        dotnet publish --configuration Release --output publish
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-actions-deploy-key
+        chmod 600 ~/.ssh/github-actions-deploy-key
 
-    - name: Deploy to Server
-      uses: appleboy/scp-action@master
-      with:
-        host: "130.225.170.52"
-        username: "hwo"  # Replace with the SSH username
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 10300
-        source: "publish/*"
-        target: "/home/gruppe-20/backend-pixel-crawler/"
+    - name: Transfer the archive to the server
+      run: rsync -avz -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/github-actions-deploy-key -p 10300" deploy.tar.gz hwo@${{ secrets.SERVER_IP }}:/home/hwo/deploy/
 
-    - name: Restart Application
+    - name: Execute deployment script
       uses: appleboy/ssh-action@master
       with:
-        host: "130.225.170.52"
-        username: "hwo"  # Replace with the SSH username
+        host: ${{ secrets.SERVER_IP }}
+        username: hwo
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         port: 10300
         script: |
-          cd /home/gruppe-20/backend-pixel-crawler
-          # Add the command to restart your application, e.g.,
-          sudo systemctl restart backend-pixel-crawler.dll
+          bash /home/hwo/scripts/deploy.sh
+
+    - name: Cleanup local deployment files
+      run: |
+        rm -f deploy.tar.gz
+        echo "Cleaned up local deployment files."
