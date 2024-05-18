@@ -26,18 +26,18 @@ namespace Backend_Pixel_Crawler.Services
                 throw new InvalidOperationException("Secret key must be configured.");
             }
             //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
-            /* if (_secretKey == null)
+            /*if (_secretKey == null)
              {
                  // Handle the case where the environmental variable is not set
                  // This could include logging an error message or throwing an exception
                  Console.WriteLine("JWT_KEY environmental variable is not set.");
                  // Optionally, throw an exception to stop execution
                  // throw new Exception("JWT_KEY environmental variable is not set.");
-             }
+             }*/
              else
              {
                  Console.WriteLine("JWT Key: " + _secretKey);
-             }*/
+             }
         }
 
         public string GenerateToken(UserModel user)
@@ -63,7 +63,7 @@ namespace Backend_Pixel_Crawler.Services
         public ClaimsPrincipal ValidateToken(string jwt)
         {
             Console.WriteLine(jwt);
-
+            var cleanJWT = SanitizeToken(jwt);
             var token = new JwtSecurityToken(jwt);
 
             var keyString = _configuration["Jwt:Key"];
@@ -78,7 +78,7 @@ namespace Backend_Pixel_Crawler.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            Console.WriteLine(tokenHandler.CanReadToken(jwt));
+            Console.WriteLine(tokenHandler.CanReadToken(cleanJWT));
 
             var validationParameters = new TokenValidationParameters
             {
@@ -92,7 +92,7 @@ namespace Backend_Pixel_Crawler.Services
 
             try
             {
-                var principal = tokenHandler.ValidateToken(jwt, validationParameters, out SecurityToken validatedToken);
+                var principal = tokenHandler.ValidateToken(cleanJWT, validationParameters, out SecurityToken validatedToken);
                 Console.WriteLine("Token is valid.");
                 return principal;
             }
@@ -120,6 +120,15 @@ namespace Backend_Pixel_Crawler.Services
             }
 
             return storedToken == incomingToken;
+        }
+
+        public string SanitizeToken(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return token;
+
+            // Remove null characters and spaces
+            return token.Replace("\0", string.Empty).Replace(" ", string.Empty);
         }
     }
 }
