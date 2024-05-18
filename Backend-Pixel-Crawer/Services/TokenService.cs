@@ -64,7 +64,6 @@ namespace Backend_Pixel_Crawler.Services
         {
             Console.WriteLine(jwt);
             var cleanJWT = SanitizeToken(jwt);
-            var token = new JwtSecurityToken(jwt);
             var isTheStringsEqual = cleanJWT.Equals(jwt);
             Console.WriteLine("are the string equal: " + isTheStringsEqual);
             var keyString = _configuration["Jwt:Key"];
