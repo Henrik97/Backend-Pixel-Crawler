@@ -1,4 +1,5 @@
 ﻿using SharedLibrary;
+using StackExchange.Redis;
 
 namespace Backend_Pixel_Crawler.Managers
 {
@@ -20,7 +21,7 @@ namespace Backend_Pixel_Crawler.Managers
 
         public bool JoinLobby(string lobbyId, TCPSession session)
         {
-            if(Lobbies.ContainsKey(lobbyId))
+            if (Lobbies.ContainsKey(lobbyId))
             {
                 Lobbies[lobbyId].AddPlayer(session);
                 return true;
@@ -34,7 +35,7 @@ namespace Backend_Pixel_Crawler.Managers
             if (Lobbies.ContainsKey(lobbyId))
             {
                 Lobbies[(lobbyId)].RemovePlayer(session);
-
+                
                 return true;
             }
 
@@ -50,9 +51,16 @@ namespace Backend_Pixel_Crawler.Managers
 
         }
 
-        public List<Lobby> GetAllLobies() 
+        public List<Lobby> GetAllLobies()
         {
-            return Lobbies.Values.ToList(); 
+            return Lobbies.Values.ToList();
+
+        }
+
+        public void SendMove(string move, string playerid, string lobbyId)
+        {           
+            string message = $"MOVEMENT, {move}, {playerid}";
+            Lobbies[lobbyId].BroadcastMessage(message, null);
             
         }
     }

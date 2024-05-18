@@ -73,7 +73,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
 
-                    
 
                     if (userAuth)
                     {
@@ -126,10 +125,13 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                                     _sessionManager.AddSession(session);
 
+                                    session.SendAsync("playerId:" + player.PlayerId);
+
                                     while (_sessionManager.GetSession(session.SessionId) != null)
                                     {
                                         await AuthenticatedSessionCommands(session, stoppingToken);
                                     }
+                                    
                                 }
                             }
                         }catch (Exception ex)
@@ -183,7 +185,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                             _lobbiesManager.LeaveLobby(command.LobbyId, session);
                             break;
                         case "MOVEMENT":
-                            
+                            _lobbiesManager.SendMove(command.Move, command.PlayerId, command.LobbyId);
                             break;
 
 
