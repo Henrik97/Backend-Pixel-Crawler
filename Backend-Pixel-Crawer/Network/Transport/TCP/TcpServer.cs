@@ -92,7 +92,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     }
 
 
-                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
+                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token.Trim());
 
                     
 
