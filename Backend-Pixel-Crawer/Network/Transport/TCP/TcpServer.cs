@@ -1,6 +1,7 @@
 ﻿using Backend_Pixel_Crawler.Interface;
 using Backend_Pixel_Crawler.Managers;
 using Backend_Pixel_Crawler.Services;
+using Microsoft.EntityFrameworkCore;
 using SharedLibrary;
 using System;
 using System.Collections.Generic;
@@ -21,13 +22,15 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         TCPSessionManager _sessionManager;
         IConfiguration _configuration;
         PlayerService _playerService;
-        public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration, PlayerService playerService)
+        IUserService _userService;
+        public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration, PlayerService playerService, IUserService userService)
         {
 
             _userAuthenticationService = userAuthenticationService;
             _lobbiesManager = lobbyManager;
             _sessionManager = sessionManager;
             _configuration = configuration;
+            _userService = userService;
             _playerService = playerService;
             
 
@@ -71,7 +74,9 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
                     string token = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
+                    var userId = await _userService.GetUserIdFromMail(token);
+
+                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(userId);
 
                     
 
@@ -81,14 +86,15 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                         try {
                             while (client.Connected)
                             {
-                                string userId = await _userAuthenticationService.GetUserIdFromToken(token);
+
+                                //string userId = await _userAuthenticationService.GetUserIdFromToken(token);
+
 
                                 var player = await _playerService.FindPlayerInDbByUserID(userId);
 
                                 if (player == null)
                                 {
 
-                                    Console.WriteLine("About to start operation that might fail.");
 
                                     string noPlayerMessage = "Please Type a player name";
                                     byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);

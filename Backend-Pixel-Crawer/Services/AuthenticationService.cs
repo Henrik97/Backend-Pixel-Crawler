@@ -34,7 +34,9 @@ namespace Backend_Pixel_Crawler.Services
                 {
                     var token = _tokenService.GenerateToken(user);
 
-                    await _tokenCacheService.SetTokenAsync(token, user.Id, TimeSpan.FromHours(1));
+                    //await _tokenCacheService.SetTokenAsync(token, user.Id, TimeSpan.FromHours(1));
+
+                    await _tokenCacheService.SetUserEmailAsync(user.Email, user.Id, TimeSpan.FromHours(1));
 
                     return (true, token);
                 }
@@ -44,7 +46,7 @@ namespace Backend_Pixel_Crawler.Services
 
         public async Task<bool> AuthenticateUsersTokenAsync(string token)
         {
-            var principal = _tokenService.ValidateToken(token);
+            /*var principal = _tokenService.ValidateToken(token);
             if (principal == null)
             {
                 Console.WriteLine("Invalid token.");
@@ -60,9 +62,14 @@ namespace Backend_Pixel_Crawler.Services
 
             Console.WriteLine("token Worked");
 
-            Console.WriteLine(_tokenService.DoesTokenExist(userId, token));
+            Console.WriteLine(_tokenService.DoesTokenExist(userId, token));*/
 
-            return await _tokenService.DoesTokenExist(userId, token);
+            Console.WriteLine(token);
+            var email = await _tokenCacheService.GetUserEmailAsync(token);
+            var EmailIsLoggedIn = await _tokenCacheService.GetUserEmailAsync(token) != null;
+            Console.Write("doest this work" + email);
+
+            return EmailIsLoggedIn;
         }
 
         public async Task<string> GetUserIdFromToken(string token)

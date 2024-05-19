@@ -1,4 +1,5 @@
 ﻿using SharedLibrary;
+using System.Threading.Tasks;
 
 namespace Backend_Pixel_Crawler.Interface
 {
@@ -11,6 +12,8 @@ namespace Backend_Pixel_Crawler.Interface
         Task<bool> UsernameExists(string username);
 
         Task<bool> EmailExists(string email);
+
+        Task<string?> GetUserIdFromMail(string email);
 
     }
 }

@@ -66,5 +66,12 @@ namespace Backend_Pixel_Crawler.Services
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
+        public async Task<string?> GetUserIdFromMail(string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            return user?.Id.ToString();
+        }
+
     }
 }

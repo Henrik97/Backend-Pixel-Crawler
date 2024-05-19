@@ -129,6 +129,18 @@ namespace Backend_Pixel_Crawler.Services
             return storedToken == incomingToken;
         }
 
+        public async Task<bool> DoesUserExistInCache(string userId, string incomingToken)
+        {
+            string storedToken = await _tokenCacheService.GetTokenAsync(userId);
+
+            if (string.IsNullOrEmpty(storedToken))
+            {
+                return false; // token was not found
+            }
+
+            return storedToken == incomingToken;
+        }
+
         public string SanitizeToken(string token)
         {
             if (string.IsNullOrEmpty(token))
