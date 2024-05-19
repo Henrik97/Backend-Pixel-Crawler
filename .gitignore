@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Backend-Pixel-Crawer/Backend-Pixel-Crawer.csproj
+/publish_output

@@ -13,7 +13,7 @@ namespace Backend_Pixel_Crawler.Interface
 
         Task<bool> EmailExists(string email);
 
-        Task<string?> GetUserIdFromMail(string email);
+        Task<string?> GetUserIdFromEmail(string email);
 
     }
 }

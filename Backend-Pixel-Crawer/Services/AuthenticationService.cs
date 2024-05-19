@@ -65,6 +65,12 @@ namespace Backend_Pixel_Crawler.Services
             Console.WriteLine(_tokenService.DoesTokenExist(userId, token));*/
 
             Console.WriteLine(token);
+
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new ArgumentException("Token is empty");
+            }
+
             var email = await _tokenCacheService.GetUserEmailAsync(token);
             var EmailIsLoggedIn = await _tokenCacheService.GetUserEmailAsync(token) != null;
             Console.Write("doest this work" + email);

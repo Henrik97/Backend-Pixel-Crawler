@@ -66,9 +66,18 @@ namespace Backend_Pixel_Crawler.Services
             return await _context.Users.AnyAsync(u => u.Email == email);
         }
 
-        public async Task<string?> GetUserIdFromMail(string email)
+        public async Task<string?> GetUserIdFromEmail(string email)
         {
+            if (string.IsNullOrEmpty(email))
+            {
+                throw new ArgumentException("User ID cannot be null or empty.", nameof(email));
+            }
+
+            Console.WriteLine("this is the email send to the method" + email);
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            Console.WriteLine(user != null);
 
             return user?.Id.ToString();
         }

@@ -70,13 +70,44 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             {
                 using (NetworkStream networkStream = client.GetStream())
                 {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                    string token = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    string token = null;
+                    try
+                    {
+                        MemoryStream memoryStream = new MemoryStream();
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        do
+                        {
+                            bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                            memoryStream.Write(buffer, 0, bytesRead);
+                        } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
+                        token = Encoding.UTF8.GetString(memoryStream.ToArray());
+                    }
+                    catch (IOException ex)
+                    {
+                        // Handle IO errors (e.g., network issues)
+                        Console.WriteLine("Error reading from network stream: " + ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle other exceptions
+                        Console.WriteLine("Unexpected error: " + ex.Message);
+                    }
 
-                    var userId = await _userService.GetUserIdFromMail(token);
+                    Console.WriteLine("this is the data of the token" + token);
+                    var userId = await _userService.GetUserIdFromEmail(token.Trim());
 
-                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(userId);
+                    Console.WriteLine("userid found: " + userId);
+
+                    var userAuth = false;
+
+                    if (userId != null)
+                    {
+                         userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(userId);
+                    } else
+                    {
+
+                    }
 
                     
 
@@ -94,14 +125,23 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                                 if (player == null)
                                 {
-
+                                    
 
                                     string noPlayerMessage = "Please Type a player name";
                                     byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
                                     await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
 
-                                    bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                                    string playerName = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+
+                                    MemoryStream memoryStream = new MemoryStream();
+                                    byte[] buffer = new byte[4096];
+                                    int bytesRead;
+                                    do
+                                    {
+                                        bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                                        memoryStream.Write(buffer, 0, bytesRead);
+                                    } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
+                                    string playerName = Encoding.UTF8.GetString(memoryStream.ToArray());
+
 
                                     if (!string.IsNullOrEmpty(playerName))
                                     {
@@ -199,8 +239,14 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             }
             catch { }
         }
+        bool EndOfMessageDetected(byte[] buffer, int bytesRead)
+        {
+            
+            return bytesRead > 0 && buffer[bytesRead - 1] == '\n';
+        }
     }
 }
+
 
 
 
