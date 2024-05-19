@@ -67,9 +67,30 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             {
                 using (NetworkStream networkStream = client.GetStream())
                 {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                    string token = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    string token = null;
+                    try
+                    {
+                        MemoryStream memoryStream = new MemoryStream();
+                        byte[] buffer = new byte[4096];
+                        int bytesRead;
+                        do
+                        {
+                            bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                            memoryStream.Write(buffer, 0, bytesRead);
+                        } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
+                        token = Encoding.UTF8.GetString(memoryStream.ToArray());
+                    }
+                    catch (IOException ex)
+                    {
+                        // Handle IO errors (e.g., network issues)
+                        Console.WriteLine("Error reading from network stream: " + ex.Message);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Handle other exceptions
+                        Console.WriteLine("Unexpected error: " + ex.Message);
+                    }
+
 
                     var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
 
@@ -90,12 +111,16 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                                     Console.WriteLine("About to start operation that might fail.");
 
+
+                                    /*
                                     string noPlayerMessage = "Please Type a player name";
                                     byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
                                     await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
 
                                     bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                                    string playerName = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+                                    string playerName = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim(); */
+
+                                    string playerName = "tom";
 
                                     if (!string.IsNullOrEmpty(playerName))
                                     {
@@ -192,6 +217,12 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 }
             }
             catch { }
+        }
+
+        bool EndOfMessageDetected(byte[] buffer, int bytesRead)
+        {
+            // Example for newline delimiter
+            return bytesRead > 0 && buffer[bytesRead - 1] == '\n';
         }
     }
 }
