@@ -14,7 +14,7 @@ namespace SharedLibrary
         public string? PlayerId { get; set; }
         public string PlayerName { get; set; }
         public string? LobbyId { get; set; }
-
+        public string? Input { get; set; }
         public string LobbyName { get; set; }
 
 

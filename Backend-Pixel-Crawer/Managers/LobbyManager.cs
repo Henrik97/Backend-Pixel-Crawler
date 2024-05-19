@@ -45,11 +45,11 @@ namespace Backend_Pixel_Crawler.Managers
             return false;
         }
 
-        public void MovementUpdate(string lobbyId, TCPSession session )
+        public void MovementUpdate(string lobbyId, string input, TCPSession session )
         {
             Lobby lobby = Lobbies[lobbyId];
             // Notify all other players in the lobby about the new move
-            string newPlayerSpawnCommand = $"{{\"command\":\"MOVEMENT\", \"playerId\":\"{session.Player.PlayerId}\"}}";
+            string newPlayerSpawnCommand = $"{{\"command\":\"MOVEMENT\", \"input\":{input}, \"playerId\":\"{session.Player.PlayerId}\"}}";
             lobby.BroadcastMessage(newPlayerSpawnCommand, session.Player);
         }
 

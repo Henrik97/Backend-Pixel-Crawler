@@ -138,7 +138,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                             _lobbiesManager.LeaveLobby(command.LobbyId, session);
                             break;
                         case "MOVEMENT":
-                            _lobbiesManager.MovementUpdate(command.LobbyId, session);
+                            _lobbiesManager.MovementUpdate(command.LobbyId, command.Input, session);
                             break;
                     }
                 }
