@@ -69,8 +69,6 @@ namespace Backend_Pixel_Crawler.Services
             var keyString = _configuration["Jwt:Key"];
 
 
-
-            Console.WriteLine(keyString);
             if (string.IsNullOrEmpty(keyString))
             {
                 throw new InvalidOperationException("JWT key is not configured properly.");

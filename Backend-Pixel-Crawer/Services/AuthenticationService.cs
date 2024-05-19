@@ -58,11 +58,10 @@ namespace Backend_Pixel_Crawler.Services
                 return false;
             }
 
-            Console.WriteLine("token Worked");
+            bool doesTokenExist = await _tokenService.DoesTokenExist(userId, token);
+            Console.WriteLine("Token exists: " + doesTokenExist);
+            return doesTokenExist;
 
-            Console.WriteLine(_tokenService.DoesTokenExist(userId, token));
-
-            return await _tokenService.DoesTokenExist(userId, token);
         }
 
         public async Task<string> GetUserIdFromToken(string token)
