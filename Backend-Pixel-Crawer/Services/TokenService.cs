@@ -98,7 +98,7 @@ namespace Backend_Pixel_Crawler.Services
             try
             {
                 var principal = tokenHandler.ValidateToken(cleanJWT, validationParameters, out SecurityToken validatedToken);
-                Console.WriteLine("Token is valid.");
+                Console.WriteLine("Token is valid");
                 return principal;
             }
             catch (SecurityTokenException ex)
