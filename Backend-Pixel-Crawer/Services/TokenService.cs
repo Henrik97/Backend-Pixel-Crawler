@@ -6,6 +6,9 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace Backend_Pixel_Crawler.Services
 {
@@ -14,110 +17,101 @@ namespace Backend_Pixel_Crawler.Services
         IConfiguration _configuration;
         ITokenCacheService _tokenCacheService;
 
-        private readonly string _secretKey;
 
         public TokenService(IConfiguration configuration, ITokenCacheService cacheService)
         {
             _configuration = configuration;
             _tokenCacheService = cacheService;
-            _secretKey = _configuration["Jwt:Key"]; // Ensure this key is set in environment variables or secure store
-            if (string.IsNullOrEmpty(_secretKey))
+        }
+        private RSA LoadPrivateKey()
+        {
+            string privateKeyPath = _configuration["Jwt:PrivateKeyPath"];
+            string privateKeyContent = File.ReadAllText(privateKeyPath).Trim();
+
+         
+            string base64PrivateKey = (privateKeyContent).Replace("\n", "").Replace("\r", "").Trim();
+
+            var rsa = RSA.Create();
+            byte[] rsaPrivateKeyBytes = Convert.FromBase64String(base64PrivateKey);
+
+            try
             {
-                throw new InvalidOperationException("Secret key must be configured.");
+                rsa.ImportPkcs8PrivateKey(new ReadOnlySpan<byte>(rsaPrivateKeyBytes), out _);
             }
-            //_secretKey = Environment.GetEnvironmentVariable("JWT_KEY")
-            /*if (_secretKey == null)
-             {
-                 // Handle the case where the environmental variable is not set
-                 // This could include logging an error message or throwing an exception
-                 Console.WriteLine("JWT_KEY environmental variable is not set.");
-                 // Optionally, throw an exception to stop execution
-                 // throw new Exception("JWT_KEY environmental variable is not set.");
-             }*/
-             else
-             {
-                 Console.WriteLine("JWT Key: " + _secretKey);
-             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error importing private key: {ex.Message}");
+                throw; // Rethrow or handle the exception appropriately
+            }
+            return rsa;
+        }
+
+        private RSA LoadPublicKey()
+        {
+            string publicKeyPath = _configuration["Jwt:PublicKeyPath"];
+            string publicKey = File.ReadAllText(publicKeyPath);
+            Console.WriteLine("Public Key Content: " + publicKey);
+            try
+            {
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(publicKey.ToCharArray());
+                return rsa;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to load public key: " + ex.Message);
+                throw;  // Re-throw the exception to handle it further up the stack
+            }
         }
 
         public string GenerateToken(UserModel user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
-            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var tokenDescriptor = new SecurityTokenDescriptor
+            using (RSA rsa = LoadPrivateKey())
             {
-                Subject = new ClaimsIdentity(new[]
+                var credentials = new SigningCredentials(new RsaSecurityKey(rsa), SecurityAlgorithms.RsaSha256);
+                var tokenDescriptor = new SecurityTokenDescriptor
                 {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Username)
-                }),
-                Expires = DateTime.UtcNow.AddHours(1),
-                SigningCredentials = credentials,
-            };
-
-
-            return tokenHandler.CreateEncodedJwt(tokenDescriptor);
+                    Subject = new ClaimsIdentity(new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                        new Claim(ClaimTypes.Name, user.Username)
+                    }),
+                    Expires = DateTime.UtcNow.AddHours(1),
+                    SigningCredentials = credentials
+                };
+                return tokenHandler.CreateEncodedJwt(tokenDescriptor);
+            }
         }
 
         public ClaimsPrincipal ValidateToken(string jwt)
         {
-            Console.WriteLine(jwt);
-            var cleanJWT = SanitizeToken(jwt);
-            var isTheStringsEqual = cleanJWT.Equals(jwt);
-            Console.WriteLine("are the string equal: " + isTheStringsEqual);
-            var keyString = _configuration["Jwt:Key"];
-
-
-
-            Console.WriteLine(keyString);
-            if (string.IsNullOrEmpty(keyString))
-            {
-                throw new InvalidOperationException("JWT key is not configured properly.");
-            }
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
             var tokenHandler = new JwtSecurityTokenHandler();
+            using (RSA rsa = LoadPublicKey())
+            {
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new RsaSecurityKey(rsa),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
 
-            try
-            {
-                Console.WriteLine("can read the clean token" + tokenHandler.ReadJwtToken(cleanJWT));
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"{ex.Message}");
-            }
-
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = securityKey,
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ClockSkew = TimeSpan.Zero,
-            };
-
-
-            try
-            {
-                var principal = tokenHandler.ValidateToken(cleanJWT, validationParameters, out SecurityToken validatedToken);
-                Console.WriteLine("Token is valid.");
-                return principal;
-            }
-            catch (SecurityTokenException ex)
-            {
-                // Handle the exception based on your specific needs, e.g., logging, throwing a more specific exception, etc.
-                Console.WriteLine($"Token validation failed: {ex.Message}");
-                return null; // or throw;
-            }
-            catch (Exception ex)
-            {
-                // General exception handling, e.g., log and rethrow or return a custom result
-                Console.WriteLine($"An error occurred while validating the token: {ex.Message}");
-                return null; // or throw;
+                try
+                {
+                    var principal = tokenHandler.ValidateToken(jwt, validationParameters, out SecurityToken validatedToken);
+                    return principal;
+                }
+                catch
+                {
+                    // Handle validation failure
+                    return null;
+                }
             }
         }
-            
-        public async Task<bool> DoesTokenExist(string userId, string incomingToken)
+
+                public async Task<bool> DoesTokenExist(string userId, string incomingToken)
         {
             string storedToken = await _tokenCacheService.GetTokenAsync(userId);
 
