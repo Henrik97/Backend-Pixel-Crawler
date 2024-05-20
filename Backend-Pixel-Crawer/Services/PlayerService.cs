@@ -13,7 +13,7 @@ namespace Backend_Pixel_Crawler.Services
         }
 
 
-        public async Task<Player> FindPlayerInDbByUserID(Guid userId) 
+        public async Task<Player> FindPlayerInDbByUserID(string userId) 
         {
             Player player = await _context.Player.FirstOrDefaultAsync(u => u.UserID == userId);
             return player;

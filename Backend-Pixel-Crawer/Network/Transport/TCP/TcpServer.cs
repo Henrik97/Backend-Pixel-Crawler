@@ -102,7 +102,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                         try {
                             while (client.Connected)
                             {
-                                Guid userId = await _userAuthenticationService.GetUserIdFromToken(token.Trim());
+                                string userId = await _userAuthenticationService.GetUserIdFromToken(token.Trim());
 
                                 var  player = await _playerService.FindPlayerInDbByUserID(userId);
 
