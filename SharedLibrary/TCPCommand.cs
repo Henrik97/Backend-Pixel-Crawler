@@ -14,13 +14,14 @@ namespace SharedLibrary
         public string? PlayerId { get; set; }
         public string PlayerName { get; set; }
         public string? LobbyId { get; set; }
-
+        public string? Input {  get; set; }
         public string LobbyName { get; set; }
 
         //Movement related hvis vi vælger at bruge JSON
         public string? Direction { get; set; }
         public int? X { get; set; }
         public int? Y { get; set; }
+        public string? Move {  get; set; }
 
     }
 
@@ -39,6 +40,7 @@ namespace SharedLibrary
         [EnumMember(Value = "SENDMESSAGE")]
         SendMessage,
         [EnumMember(Value = "MOVEMENT")]
-        Movement
+        Movement,
+        
     }
 }

@@ -19,6 +19,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         IUserAuthenticationService _userAuthenticationService;
         LobbyManager _lobbiesManager;
         TCPSessionManager _sessionManager;
+        UserService _userService;
+        CreateUserModel _createUserModel;
         IConfiguration _configuration;
         PlayerService _playerService;
         public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration, PlayerService playerService)
@@ -94,7 +96,6 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token.Trim());
 
-                    
 
                     if (userAuth)
                     {
@@ -151,10 +152,13 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                                     _sessionManager.AddSession(session);
 
+                                    session.SendAsync("playerId:" + player.PlayerId);
+
                                     while (_sessionManager.GetSession(session.SessionId) != null)
                                     {
                                         await AuthenticatedSessionCommands(session, stoppingToken);
                                     }
+                                    
                                 }
                             }
                         }catch (Exception ex)
@@ -179,13 +183,11 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             {
 
                 Console.WriteLine(ex.ToString());
-
             }
         }
 
         private async Task AuthenticatedSessionCommands(TCPSession session, CancellationToken stoppingToken)
         {
-
             try
             {
                 while (!stoppingToken.IsCancellationRequested)
@@ -196,7 +198,12 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                     switch (command.Command)
                     {
                         case "JOIN":
-                            _lobbiesManager.JoinLobby(command.LobbyId, session);
+                            Console.WriteLine("Entered the JOIN case");
+
+                            _lobbiesManager.JoinLobby(command.LobbyName, session);
+                           // string invalidTokenMessage = ("SPAWN_PLAYER", command.PlayerId);
+                          //  byte[] data = Encoding.UTF8.GetBytes(invalidTokenMessage);
+
                             break;
                         case "CREATE":
                             _lobbiesManager.CreateLobby(command.LobbyName, command.PlayerName);
@@ -208,11 +215,8 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                             _lobbiesManager.LeaveLobby(command.LobbyId, session);
                             break;
                         case "MOVEMENT":
-                            
+                            _lobbiesManager.MovementUpdate(command.LobbyId, command.Input, session);
                             break;
-
-
-
                     }
                 }
             }
