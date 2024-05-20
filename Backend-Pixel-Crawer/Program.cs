@@ -37,14 +37,6 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "backend-pixel-crawler-dist-cache";
 });
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(5009); // HTTP endpoint
-    options.ListenAnyIP(7206, listenOptions =>
-    {
-        listenOptions.UseHttps("/etc/haproxy/certs/pixelcrawler.online.crt", "/etc/haproxy/certs/pixelcrawler.online.key");
-    });
-});
 
 
 builder.Logging.ClearProviders();
