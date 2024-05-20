@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         TCPSessionManager _sessionManager;
         IConfiguration _configuration;
         PlayerService _playerService;
+        private readonly List<byte> _lastFewBytes = new List<byte>();
         public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration, PlayerService playerService)
         {
 
@@ -68,17 +70,33 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                 using (NetworkStream networkStream = client.GetStream())
                 {
                     string token = null;
-                    try
-                    {
+                    try {
+                    
                         MemoryStream memoryStream = new MemoryStream();
                         byte[] buffer = new byte[4096];
                         int bytesRead;
                         do
                         {
                             bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                            if (bytesRead == 0)
+                            {
+                                Console.WriteLine("Client disconnected unexpectedly.");
+                                return; // Exit if client disconnects prematurely
+                            }
                             memoryStream.Write(buffer, 0, bytesRead);
+                            if (EndOfMessageDetected(buffer, bytesRead))
+                            {
+                                var message = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
+                                Console.WriteLine($"Complete message received: {message}");
+                                memoryStream.SetLength(0); // Reset memory stream for next message
+                            }
                         } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
                         token = Encoding.UTF8.GetString(memoryStream.ToArray());
+                        if (string.IsNullOrEmpty(token))
+                        {
+                            Console.WriteLine("Received empty token. Client disconnected or sent incorrect data.");
+                            return;
+                        }
                     }
                     catch (IOException ex)
                     {
@@ -98,6 +116,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     if (userAuth)
                     {
+                        Console.WriteLine("Token validated. Starting session.");
 
                         try {
                             while (client.Connected)
@@ -187,9 +206,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             }
             catch (Exception ex)
             {
-
-                Console.WriteLine(ex.ToString());
-
+                Console.WriteLine($"Error handling client: {ex.Message}");
             }
         }
 
@@ -231,8 +248,26 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
         bool EndOfMessageDetected(byte[] buffer, int bytesRead)
         {
-            // Example for newline delimiter
-            return bytesRead > 0 && buffer[bytesRead - 1] == '\n';
+
+            if (bytesRead == 0)
+                return false;
+
+            _lastFewBytes.AddRange(buffer.Take(bytesRead));
+
+            // Check if the message ends with a newline
+            bool endDetected = _lastFewBytes.Contains((byte)'\n');
+
+            // If end is detected, reset the list
+            if (endDetected)
+                _lastFewBytes.Clear();
+            else
+            {
+                // Keep only the last byte to check for a split newline in the next read
+                if (_lastFewBytes.Count > 1)
+                    _lastFewBytes.RemoveRange(0, _lastFewBytes.Count - 1);
+            }
+            Console.WriteLine(endDetected);
+            return endDetected;
         }
     }
 }
