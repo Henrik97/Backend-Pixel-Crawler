@@ -20,12 +20,14 @@ namespace Backend_Pixel_Crawler.Controllers
         private readonly IPasswordHasher _passwordHasher;
         private readonly ApplicationDbContext _context;
         private readonly IUserAuthenticationService _userAuthenticationService;
+        private readonly IUserService  _userService;
 
-            public AuthenticationController(ApplicationDbContext context, IPasswordHasher passwordHasher, IUserAuthenticationService userAuthentication )
+            public AuthenticationController(ApplicationDbContext context, IPasswordHasher passwordHasher, IUserAuthenticationService userAuthentication, IUserService userService )
             {
                 _context = context;
                 _passwordHasher = passwordHasher;
                 _userAuthenticationService = userAuthentication;
+                _userService = userService;
                 
             
             }
@@ -40,21 +42,16 @@ namespace Backend_Pixel_Crawler.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var hashPassword = _passwordHasher.HashPassword(createUser.Password);
+            var wasUserCreated = await _userService.CreateUserAsync(createUser);
 
-                var user = new UserModel
-                {
-                    Name = createUser.Name,
-                    Username = createUser.Username,
-                    Email = createUser.Email,
-                    Salt = hashPassword.Salt,
-                    HashedPassword = hashPassword.HashPassword
 
-                };
+            if (wasUserCreated.Success)
+            {
+                return Ok("User registered successfully");
+            };
 
-                _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-            return Ok("User registered successfully");
+
+            return BadRequest(wasUserCreated.ErrorMessage);
 
 
         }
