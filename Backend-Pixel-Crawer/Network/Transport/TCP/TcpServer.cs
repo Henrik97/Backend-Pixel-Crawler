@@ -123,7 +123,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                         case "JOIN":
                             Console.WriteLine("Entered the JOIN case");
 
-                            _lobbiesManager.JoinLobby(command.LobbyId, session);
+                            _lobbiesManager.JoinLobby(command.LobbyName, session);
                            // string invalidTokenMessage = ("SPAWN_PLAYER", command.PlayerId);
                           //  byte[] data = Encoding.UTF8.GetBytes(invalidTokenMessage);
 

@@ -11,18 +11,18 @@ namespace Backend_Pixel_Crawler.Managers
         {
             Lobby lobby = new Lobby(lobbyName, hostName);
 
-            Lobbies.Add(lobby.LobbyId, lobby);
+            Lobbies.Add(lobby.LobbyName, lobby);
 
             Console.WriteLine("New Lobby Was created");
 
             return lobby;
         }
 
-        public bool JoinLobby(string lobbyId, TCPSession session)
+        public bool JoinLobby(string lobbyName, TCPSession session)
         {
-            if(Lobbies.ContainsKey(lobbyId))
+            if(Lobbies.ContainsKey(lobbyName))
             {
-                Lobby lobby = Lobbies[lobbyId];
+                Lobby lobby = Lobbies[lobbyName];
                 // Add the player to the ConnectedSession list and Players dictionary
                 lobby.AddPlayer(session);
 
