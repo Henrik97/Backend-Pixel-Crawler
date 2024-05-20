@@ -42,7 +42,7 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(5009); // HTTP endpoint
     options.ListenAnyIP(7206, listenOptions =>
     {
-        listenOptions.UseHttps("/etc/haproxy/certs/pixelcrawler.online.pem");
+        listenOptions.UseHttps("/etc/haproxy/certs/pixelcrawler.online.crt", "/etc/haproxy/certs/pixelcrawler.online.key");
     });
 });
 
