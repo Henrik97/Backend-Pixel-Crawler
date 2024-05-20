@@ -20,23 +20,28 @@ namespace Backend_Pixel_Crawler.Managers
 
         public bool JoinLobby(string lobbyName, TCPSession session)
         {
+            Console.WriteLine("FIRST JOIN LOBBY PROCESS");
             if(Lobbies.ContainsKey(lobbyName))
             {
+                Console.WriteLine("SECOND JOIN LOBBY PROCESS");
                 Lobby lobby = Lobbies[lobbyName];
                 // Add the player to the ConnectedSession list and Players dictionary
                 lobby.AddPlayer(session);
 
                 // Notify all other players in the lobby about the new player
                 string newPlayerSpawnCommand = $"{{\"command\":\"SPAWN_PLAYER\", \"playerId\":\"{session.Player.PlayerId}\"}}";
-                lobby.BroadcastMessage(newPlayerSpawnCommand, session.Player);
-
+                string sendCommand = $"SPAWN_PLAYER, {session.Player.PlayerId}";
+                lobby.BroadcastMessage(sendCommand, session.Player);
+                Console.WriteLine("AFTER BroadcastMessage statement in join lobby");
                 // Notify the new player about all existing players
                 foreach (var existingSession in lobby.ConnectedSession)
                 {
                     if (existingSession != session)  // Ensure not to include the new player
                     {
                         string existingPlayerSpawnCommand = $"{{\"command\":\"SPAWN_PLAYER\", \"playerId\":\"{existingSession.Player.PlayerId}\"}}";
-                        session.SendAsync(existingPlayerSpawnCommand);
+                        string existingSendCommand = $"SPAWN_PLAYER, {existingSession.Player.PlayerId}";
+
+                        session.SendAsync(existingSendCommand);
                     }
                 }
                 return true;

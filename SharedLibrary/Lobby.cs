@@ -56,6 +56,7 @@ namespace SharedLibrary
         }
 
         public void BroadcastMessage(string message, Player excludedPlayer = null) { 
+            Console.WriteLine(message);
             
             foreach (TCPSession session in ConnectedSession) {
 
