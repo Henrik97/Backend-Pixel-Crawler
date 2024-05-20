@@ -9,12 +9,12 @@ namespace SharedLibrary
 
         public string PlayerName { get; set; }
 
-        public string UserID { get; set; }
+        public Guid UserID { get; set; }
 
         public string? CurrentLobbyId { get; set; }
 
         public Player() { }
-        public Player( string playerName, string userID) {
+        public Player( string playerName, Guid userID) {
 
             PlayerName = playerName;
             UserID = userID;
