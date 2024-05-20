@@ -22,6 +22,27 @@ namespace Backend_Pixel_Crawler.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SharedLibrary.Player", b =>
+                {
+                    b.Property<string>("PlayerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("CurrentLobbyId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PlayerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PlayerId");
+
+                    b.ToTable("Player");
+                });
+
             modelBuilder.Entity("SharedLibrary.UserModel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -37,10 +58,6 @@ namespace Backend_Pixel_Crawler.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

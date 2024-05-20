@@ -15,7 +15,5 @@ namespace SharedLibrary
 
         public byte[] Salt { get; set; }
         public string HashedPassword { get; set; }
-
-        public string Password { get; set; }
     }
 }

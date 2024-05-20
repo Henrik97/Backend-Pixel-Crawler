@@ -40,8 +40,7 @@ namespace Backend_Pixel_Crawler.Services
                 Username = createUser.Username,
                 Email = createUser.Email,
                 Salt = _passwordHasher.HashPassword(createUser.Password).Salt,
-                HashedPassword = _passwordHasher.HashPassword(createUser.Password).HashPassword,
-                Password = createUser.Password,
+                HashedPassword = _passwordHasher.HashPassword(createUser.Password).HashPassword
 
             };
 

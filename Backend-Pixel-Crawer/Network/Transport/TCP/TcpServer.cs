@@ -22,13 +22,16 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         UserService _userService;
         CreateUserModel _createUserModel;
         IConfiguration _configuration;
-        public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration)
+        PlayerService _playerService;
+        public TcpServer(IUserAuthenticationService userAuthenticationService, LobbyManager lobbyManager, TCPSessionManager sessionManager, IConfiguration configuration, PlayerService playerService)
         {
 
             _userAuthenticationService = userAuthenticationService;
             _lobbiesManager = lobbyManager;
             _sessionManager = sessionManager;
             _configuration = configuration;
+            _playerService = playerService;
+            
 
         }
 
@@ -72,22 +75,71 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
 
                     var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token);
 
+
                     if (userAuth)
                     {
-                        Console.WriteLine("Token is valid. Client authenticated.");
-                        var session = new TCPSession(client);
 
-                        string AuthenticatedMessage = "You are authenticated and a session is created";
+                        try {
+                            while (client.Connected)
+                            {
+                                string userId = await _userAuthenticationService.GetUserIdFromToken(token);
 
-                        session.SendAsync(AuthenticatedMessage);
+                                var player = await _playerService.FindPlayerInDbByUserID(userId);
 
-                        _sessionManager.AddSession(session);
+                                if (player == null)
+                                {
 
-                        while (_sessionManager.GetSession(session.SessionId) != null)
+                                    Console.WriteLine("About to start operation that might fail.");
+
+                                    string noPlayerMessage = "Please Type a player name";
+                                    byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
+                                    await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
+
+                                    bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                                    string playerName = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+
+                                    if (!string.IsNullOrEmpty(playerName))
+                                    {
+
+                                        player = new Player(playerName, userId);
+                                        await _playerService.AddPlayerToDb(player);
+
+                                        Console.WriteLine($"New player created: {playerName}");
+
+                                    }
+                                    else
+                                    {
+                                        string errorMessage = "No valid name received. Please try again.";
+                                        byte[] errorData = Encoding.UTF8.GetBytes(errorMessage);
+                                        await networkStream.WriteAsync(errorData, 0, errorData.Length);
+                                    }
+                                }
+
+                                if (player != null)
+                                {
+
+                                    Console.WriteLine("Token is valid. Client authenticated.");
+                                    var session = new TCPSession(client, player);
+
+                                    string AuthenticatedMessage = "You are authenticated and a session is created";
+
+                                    session.SendAsync(AuthenticatedMessage);
+
+                                    _sessionManager.AddSession(session);
+
+                                    session.SendAsync("playerId:" + player.PlayerId);
+
+                                    while (_sessionManager.GetSession(session.SessionId) != null)
+                                    {
+                                        await AuthenticatedSessionCommands(session, stoppingToken);
+                                    }
+                                    
+                                }
+                            }
+                        }catch (Exception ex)
                         {
-                          await  AuthenticatedSessionCommands(session, stoppingToken);
+                            Console.WriteLine($"An error occurred: {ex.Message}");
                         }
-
 
                     }
                     else
