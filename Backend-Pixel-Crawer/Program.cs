@@ -34,7 +34,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "backend-pixel-crawler-dist-cache"; // Optional, but helpful for prefixing the keys
+    options.InstanceName = "backend-pixel-crawler-dist-cache";
 });
 
 builder.WebHost.ConfigureKestrel(options =>
@@ -42,7 +42,7 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(5009); // HTTP endpoint
     options.ListenAnyIP(7206, listenOptions =>
     {
-        listenOptions.UseHttps("/etc/haproxy/certs/pixelcrawler.online.pem", "/etc/haproxy/certs/private.key");
+        listenOptions.UseHttps("/etc/haproxy/certs/pixelcrawler.online.pem");
     });
 });
 
