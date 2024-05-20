@@ -37,6 +37,12 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "backend-pixel-crawler-dist-cache";
 });
 
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status307TemporaryRedirect;
+    options.HttpsPort = 7206;
+});
+
 
 
 builder.Logging.ClearProviders();
@@ -55,7 +61,10 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.UseAuthorization(); 
+app.UseAuthorization();
+
+app.UseHttpsRedirection();
+
 
 app.MapControllers();
 
