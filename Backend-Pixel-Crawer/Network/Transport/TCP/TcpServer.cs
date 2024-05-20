@@ -109,18 +109,28 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
                                 if (player == null)
                                 {
 
-                                    Console.WriteLine("About to start operation that might fail.");
 
 
-                                    /*
                                     string noPlayerMessage = "Please Type a player name";
                                     byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
+
+                                   
                                     await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
 
-                                    bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                                    string playerName = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim(); */
+                                    
+                                    MemoryStream memoryStream = new MemoryStream();
+                                    byte[] buffer = new byte[4096];
+                                    int bytesRead;
 
-                                    string playerName = "tom";
+                                    
+                                    do
+                                    {
+                                        bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
+                                        memoryStream.Write(buffer, 0, bytesRead);
+                                    } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
+
+                                  
+                                    string playerName = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
 
                                     if (!string.IsNullOrEmpty(playerName))
                                     {
