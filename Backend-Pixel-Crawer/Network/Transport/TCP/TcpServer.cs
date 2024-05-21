@@ -121,6 +121,11 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             {
                 Console.WriteLine("Unexpected error: " + ex.Message);
             }
+            finally
+            {
+                client.Close();
+                Console.WriteLine("Client connection closed.");
+            }
         }
 
         private async Task<bool> AuthenticateToken(string token, NetworkStream networkStream, TcpClient client)
