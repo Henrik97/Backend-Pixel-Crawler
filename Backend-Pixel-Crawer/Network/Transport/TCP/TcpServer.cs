@@ -64,149 +64,144 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
         {
             Console.WriteLine("Handling client...");
 
-
             try
             {
                 using (NetworkStream networkStream = client.GetStream())
                 {
+                    MemoryStream memoryStream = new MemoryStream();
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
                     string token = null;
-                    try {
-                    
-                        MemoryStream memoryStream = new MemoryStream();
-                        byte[] buffer = new byte[4096];
-                        int bytesRead;
-                        do
+
+                    // Read from the network stream
+                    do
+                    {
+                        bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length, stoppingToken);
+                        if (bytesRead == 0)
                         {
-                            bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                            if (bytesRead == 0)
-                            {
-                                Console.WriteLine("Client disconnected unexpectedly.");
-                                return; // Exit if client disconnects prematurely
-                            }
-                            memoryStream.Write(buffer, 0, bytesRead);
-                            if (EndOfMessageDetected(buffer, bytesRead))
-                            {
-                                var message = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
-                                Console.WriteLine($"Complete message received: {message}");
-                                memoryStream.SetLength(0); // Reset memory stream for next message
-                            }
-                        } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
-                        token = Encoding.UTF8.GetString(memoryStream.ToArray());
-                        if (string.IsNullOrEmpty(token))
-                        {
-                            Console.WriteLine("Received empty token. Client disconnected or sent incorrect data.");
-                            return;
+                            Console.WriteLine("Client disconnected unexpectedly.");
+                            return; // Exit if client disconnects prematurely
                         }
-                    }
-                    catch (IOException ex)
-                    {
-                        // Handle IO errors (e.g., network issues)
-                        Console.WriteLine("Error reading from network stream: " + ex.Message);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Handle other exceptions
-                        Console.WriteLine("Unexpected error: " + ex.Message);
-                    }
+                        memoryStream.Write(buffer, 0, bytesRead);
 
+                        if (EndOfMessageDetected(buffer, bytesRead))
+                        {
+                            token = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
+                            Console.WriteLine($"Complete message received: {token}");
+                            memoryStream.SetLength(0); // Clear memory stream for potential future use
 
-                    var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token.Trim());
-
-                    
-
-                    if (userAuth)
-                    {
-                        Console.WriteLine("Token validated. Starting session.");
-
-                        try {
-                            while (client.Connected)
+                            if (!string.IsNullOrEmpty(token))
                             {
-                                string userId = await _userAuthenticationService.GetUserIdFromToken(token.Trim());
-
-                                var  player = await _playerService.FindPlayerInDbByUserID(userId);
-
-                                if (player == null)
+                                if (await AuthenticateToken(token, networkStream, client))
                                 {
-
-
-
-                                    string noPlayerMessage = "Please Type a player name";
-                                    byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
-
-                                   
-                                    await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
-
-                                    
-                                    MemoryStream memoryStream = new MemoryStream();
-                                    byte[] buffer = new byte[4096];
-                                    int bytesRead;
-
-                                    
-                                    do
-                                    {
-                                        bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length);
-                                        memoryStream.Write(buffer, 0, bytesRead);
-                                    } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
-
-                                  
-                                    string playerName = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
-
-                                    if (!string.IsNullOrEmpty(playerName))
-                                    {
-
-                                        player = new Player(playerName, userId);
-                                        await _playerService.AddPlayerToDb(player);
-
-                                        Console.WriteLine($"New player created: {playerName}");
-
-                                    }
-                                    else
-                                    {
-                                        string errorMessage = "No valid name received. Please try again.";
-                                        byte[] errorData = Encoding.UTF8.GetBytes(errorMessage);
-                                        await networkStream.WriteAsync(errorData, 0, errorData.Length);
-                                    }
+                                    Console.WriteLine("Token validated. Starting session.");
+                                    await ManageAuthenticatedClient(client, token, stoppingToken);
+                                    return; // Exit the method upon successful session management
                                 }
-
-                                if (player != null)
+                                else
                                 {
-
-                                    Console.WriteLine("Token is valid. Client authenticated.");
-                                    var session = new TCPSession(client, player);
-
-                                    string AuthenticatedMessage = "You are authenticated and a session is created";
-
-                                    session.SendAsync(AuthenticatedMessage);
-
-                                    _sessionManager.AddSession(session);
-
-                                    while (_sessionManager.GetSession(session.SessionId) != null)
-                                    {
-                                        await AuthenticatedSessionCommands(session, stoppingToken);
-                                    }
+                                    Console.WriteLine("Invalid token. Disconnecting client.");
+                                    return; // Disconnect if the token is invalid
                                 }
                             }
-                        }catch (Exception ex)
-                        {
-                            Console.WriteLine($"An error occurred: {ex.Message}");
+                            else
+                            {
+                                Console.WriteLine("Received empty token. Disconnecting client.");
+                                return;
+                            }
                         }
+                    } while (!stoppingToken.IsCancellationRequested);
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine("Error reading from network stream: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Unexpected error: " + ex.Message);
+            }
+        }
 
+        private async Task<bool> AuthenticateToken(string token, NetworkStream networkStream, TcpClient client)
+        {
+            var userAuth = await _userAuthenticationService.AuthenticateUsersTokenAsync(token.Trim());
+            if (!userAuth)
+            {
+                string invalidTokenMessage = "Invalid token. Please log in again.";
+                byte[] data = Encoding.UTF8.GetBytes(invalidTokenMessage);
+                await networkStream.WriteAsync(data, 0, data.Length);
+                client.Close();
+                return false;
+            }
+            return true;
+        }
+        private async Task ManageAuthenticatedClient(TcpClient client, string token, CancellationToken stoppingToken)
+        {
+            NetworkStream networkStream = client.GetStream();
+            string userId = await _userAuthenticationService.GetUserIdFromToken(token.Trim());
+            Player player = await _playerService.FindPlayerInDbByUserID(userId);
+
+            try
+            {
+                if (player == null)
+                {
+                    string noPlayerMessage = "Please type a player name.";
+                    byte[] noPlayerData = Encoding.UTF8.GetBytes(noPlayerMessage);
+                    await networkStream.WriteAsync(noPlayerData, 0, noPlayerData.Length);
+
+                    MemoryStream memoryStream = new MemoryStream();
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+
+                    do
+                    {
+                        bytesRead = await networkStream.ReadAsync(buffer, 0, buffer.Length, stoppingToken);
+                        if (bytesRead == 0)
+                        {
+                            Console.WriteLine("Client disconnected unexpectedly while entering name.");
+                            return; // Exit if client disconnects prematurely
+                        }
+                        memoryStream.Write(buffer, 0, bytesRead);
+                    } while (!EndOfMessageDetected(buffer, bytesRead) && bytesRead > 0);
+
+                    string playerName = Encoding.UTF8.GetString(memoryStream.ToArray()).Trim();
+                    memoryStream.SetLength(0);  // Clear the buffer
+
+                    if (!string.IsNullOrEmpty(playerName))
+                    {
+                        player = new Player(playerName, userId);
+                        await _playerService.AddPlayerToDb(player);
+                        Console.WriteLine($"New player created: {playerName}");
                     }
                     else
                     {
-                        Console.WriteLine("Invalid token. Disconnecting client.");
+                        string errorMessage = "No valid name received. Please try again.";
+                        byte[] errorData = Encoding.UTF8.GetBytes(errorMessage);
+                        await networkStream.WriteAsync(errorData, 0, errorData.Length);
+                        return; // Consider exiting or re-prompting, based on your application logic
+                    }
+                }
 
-                        string invalidTokenMessage = "You passed an invalid token, login again to gain a new token";
-                        byte[] data = Encoding.UTF8.GetBytes(invalidTokenMessage);
+                if (player != null)
+                {
+                    Console.WriteLine("Client authenticated, got a player and a session is ready.");
+                    var session = new TCPSession(client, player);
+                    string authenticatedMessage = "A player was found under your user name and a session is created, send game commands!";
+                    await session.SendAsync(authenticatedMessage);  // Ensure SendAsync is an awaitable method
 
-                        client.GetStream().Write(data, 0, data.Length);
-                        client.Close();
+                    _sessionManager.AddSession(session);
+
+                    while (_sessionManager.GetSession(session.SessionId) != null && !stoppingToken.IsCancellationRequested)
+                    {
+                        await AuthenticatedSessionCommands(session, stoppingToken);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error handling client: {ex.Message}");
+                Console.WriteLine($"An error occurred during session management: {ex.Message}");
+                // Consider cleaning up or reinitializing the session
             }
         }
 
@@ -246,7 +241,7 @@ namespace Backend_Pixel_Crawler.Network.Transport.TCP
             catch { }
         }
 
-        bool EndOfMessageDetected(byte[] buffer, int bytesRead)
+bool EndOfMessageDetected(byte[] buffer, int bytesRead)
         {
 
             if (bytesRead == 0)
